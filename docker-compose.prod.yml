@@ -1,6 +1,7 @@
 version: '3.8'
 
 services:
+  # Local Postgres (Optional if using Supabase)
   postgres:
     image: postgres:16
     container_name: school_helpdesk_db
@@ -26,7 +27,7 @@ services:
     ports:
       - "4000:4000"
     environment:
-      DATABASE_URL: "postgresql://admin:${DB_PASSWORD}@postgres:5432/school_helpdesk?schema=public"
+      DATABASE_URL: ${DATABASE_URL}
       JWT_SECRET: ${JWT_SECRET}
       JWT_EXPIRATION: ${JWT_EXPIRATION:-15m}
       ALLOWED_EMAIL_DOMAIN: "ssakhk.cz"

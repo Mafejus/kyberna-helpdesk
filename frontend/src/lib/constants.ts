@@ -1,4 +1,6 @@
-export const LESSON_TIMES = {
+export type LessonNumber = 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12;
+
+export const LESSON_TIMES: Record<LessonNumber, { start: string; end: string }> = {
   1: { start: '07:50', end: '08:35' },
   2: { start: '08:45', end: '09:30' },
   3: { start: '09:45', end: '10:30' },
