@@ -1,0 +1,387 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  ADMIN
+  TEACHER
+  STUDENT
+}
+
+enum TicketStatus {
+  UNASSIGNED
+  IN_PROGRESS
+  DONE_WAITING_APPROVAL
+  APPROVED
+  REJECTED
+}
+
+enum Priority {
+  LOW
+  NORMAL
+  HIGH
+  CRITICAL
+}
+
+model User {
+  id           String    @id @default(uuid())
+  email        String    @unique
+  passwordHash String
+  fullName     String
+  role         Role
+  isActive     Boolean   @default(true)
+  passwordUpdatedAt DateTime @default(now())
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  // Relations
+  ticketsReported   Ticket[]         @relation("ReportedBy")
+  ticketsAssigned   TicketAssignee[]
+  comments          TicketComment[]
+  uploadedFiles     TicketAttachment[]
+  helpdeskShifts    HelpdeskShiftAssignee[]
+  
+  // New Relations
+  notifications     Notification[]
+  checkIns          HelpdeskCheckIn[]
+  checkInsEnded     HelpdeskCheckIn[]        @relation("CheckInEndedBy")
+  swapsOffered      HelpdeskSwap[]           @relation("SwapOfferedBy")
+  swapsAccepted     HelpdeskSwap[]           @relation("SwapAcceptedBy")
+  scores            UserScore[]
+  preference        NotificationPreference?
+}
+
+model NotificationPreference {
+  id        String   @id @default(uuid())
+  userId    String   @unique
+  settings  Json     // Map<NotificationType, boolean>
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model UserScore {
+  id        String   @id @default(uuid())
+  points    Int      // Can be positive (reward) or negative (penalty)
+  reason    String?
+  createdAt DateTime @default(now())
+  
+  ticketId  String?
+  userId    String
+  
+  ticket    Ticket?  @relation(fields: [ticketId], references: [id], onDelete: SetNull)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Classroom {
+  id        String   @id @default(uuid())
+  code      String   @unique // e.g. "205"
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  tickets      Ticket[]
+  classroomPcs ClassroomPc[] 
+  pcProperties PcProperty[]
+}
+
+model Ticket {
+  id                String       @id @default(uuid())
+  title             String
+  description       String
+  status            TicketStatus @default(UNASSIGNED)
+  priority          Priority     @default(NORMAL)
+  reportedAt        DateTime     @default(now())
+
+  plannedAt         DateTime?
+  dueAt             DateTime?    // Made optional for migration, will be required logic-wise
+
+  
+  studentWorkNote   String?      // Note from student when marking done
+  adminApprovalNote String?      // Note from admin when approving/rejecting
+  difficultyPoints  Int?         // 1, 3, 5
+
+  createdAt         DateTime     @default(now())
+  updatedAt         DateTime     @updatedAt
+
+  // Foreign Keys
+  classroomId       String
+  createdById       String
+
+  // Relations
+  classroom         Classroom          @relation(fields: [classroomId], references: [id])
+  createdBy         User               @relation("ReportedBy", fields: [createdById], references: [id])
+  assignees         TicketAssignee[]
+  comments          TicketComment[]
+  attachments       TicketAttachment[]
+  scores            UserScore[]
+
+  @@index([classroomId, status])
+  @@index([priority, status])
+  @@index([reportedAt])
+  @@index([createdById])
+  @@index([status])
+}
+
+model TicketAssignee {
+  ticketId   String
+  userId     String
+  claimedAt  DateTime @default(now())
+  orderIndex Int      // 1 = first claimer (gets points), 2+ = helpers
+
+  ticket Ticket @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([ticketId, userId])
+}
+
+model TicketComment {
+  id        String   @id @default(uuid())
+  message   String
+  createdAt DateTime @default(now())
+
+  ticketId  String
+  authorId  String
+
+  ticket    Ticket @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+  author    User   @relation(fields: [authorId], references: [id])
+}
+
+model TicketAttachment {
+  id           String   @id @default(uuid())
+  originalName String
+  fileName     String
+  mimeType     String
+  size         Int
+  path         String // Local path like "uploads/xyz.jpg" or full URL if S3
+  createdAt    DateTime @default(now())
+
+  ticketId     String
+  uploadedById String
+
+  ticket       Ticket @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+  uploadedBy   User   @relation(fields: [uploadedById], references: [id])
+}
+
+model HelpdeskShift {
+  id        String   @id @default(uuid())
+  date      String   // YYYY-MM-DD
+  lesson    Int      // 1-12
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  assignees HelpdeskShiftAssignee[]
+  
+  // New Relations
+  checkIns  HelpdeskCheckIn[]
+  swaps     HelpdeskSwap[]
+
+  @@unique([date, lesson])
+}
+
+model HelpdeskShiftAssignee {
+  id        String   @id @default(uuid())
+  shiftId   String
+  userId    String
+  createdAt DateTime @default(now())
+
+  shift     HelpdeskShift @relation(fields: [shiftId], references: [id], onDelete: Cascade)
+  user      User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([shiftId, userId])
+}
+
+// 1) ACTIVITY LOG (Audit Trail)
+enum AuditEntityType {
+  TICKET
+  SCHEDULE_SLOT
+  USER
+  ATTACHMENT
+  SWAP
+}
+
+enum AuditAction {
+  // Ticket
+  TICKET_CREATED
+  TICKET_STATUS_CHANGED
+  TICKET_PRIORITY_CHANGED
+  TICKET_DUE_DATE_CHANGED
+  TICKET_ASSIGNEE_ADDED
+  TICKET_ASSIGNEE_REMOVED
+  TICKET_APPROVED
+  TICKET_REJECTED
+  TICKET_MARKED_DONE
+  TICKET_FILE_UPLOADED
+  TICKET_FILE_REMOVED
+  TICKET_NOTE_ADDED
+  TICKET_DELETED
+  
+  // Schedule
+  SLOT_CLAIMED
+  SLOT_UNCLAIMED
+  SLOT_ASSIGNED_BY_ADMIN
+  SLOT_REMOVED_BY_ADMIN
+  CHECK_IN_STARTED
+  CHECK_IN_ENDED
+  SWAP_REQUESTED
+  SWAP_ACCEPTED
+  SWAP_CANCELLED
+  
+  // User
+  USER_CREATED
+  USER_UPDATED
+  USER_PASSWORD_RESET
+}
+
+model AuditLog {
+  id          String          @id @default(uuid())
+  createdAt   DateTime        @default(now())
+  
+  actorUserId String?         // Nullable for system actions
+  actorRole   String          // Snapshot of role at time of action
+  actorName   String          // Snapshot of name
+  
+  entityType  AuditEntityType
+  entityId    String
+  action      AuditAction
+  
+  before      Json?           // Stores only changed fields
+  after       Json?           // Stores only changed fields
+  message     String?         // Human readable summary
+  
+  ip          String?
+  userAgent   String?
+  
+  @@index([entityType, entityId])
+  @@index([createdAt])
+  @@index([actorUserId])
+}
+
+// 2) IN-APP NOTIFICATIONS
+enum NotificationType {
+  TICKET_APPROVED
+  TICKET_RETURNED
+  TICKET_PRIORITY_CHANGED
+  TICKET_DUE_DATE_CHANGED
+  TICKET_ASSIGNED
+  TICKET_UNASSIGNED
+  TICKET_WAITING_APPROVAL
+  
+  SLOT_CHANGED_BY_ADMIN
+  SLOT_CANCELLED_LATE
+  
+  SWAP_OFFER_CREATED
+  SWAP_OFFER_ACCEPTED
+  SWAP_OFFER_CANCELLED
+}
+
+model Notification {
+  id        String           @id @default(uuid())
+  createdAt DateTime         @default(now())
+  readAt    DateTime?
+  
+  userId    String
+  type      NotificationType
+  title     String
+  body      String
+  linkUrl   String
+  metadata  Json?            // e.g. { ticketId: "..." }
+
+  user      User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@index([userId, readAt])
+}
+
+// 3) CHECK-IN MODE
+model HelpdeskCheckIn {
+  id            String    @id @default(uuid())
+  shiftId       String
+  userId        String
+  startedAt     DateTime  @default(now())
+  endedAt       DateTime?
+  endedByUserId String?   // If forcibly ended by admin
+  
+  note          String?
+  
+  shift         HelpdeskShift @relation(fields: [shiftId], references: [id], onDelete: Cascade)
+  user          User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  endedBy       User?         @relation("CheckInEndedBy", fields: [endedByUserId], references: [id])
+}
+
+// 4) SWAP / EXCHANGE OFFERS
+enum SwapStatus {
+  OPEN
+  ACCEPTED
+  CANCELLED
+  EXPIRED
+}
+
+model HelpdeskSwap {
+  id               String     @id @default(uuid())
+  createdAt        DateTime   @default(now())
+  
+  shiftId          String
+  offeredByUserId  String
+  status           SwapStatus @default(OPEN)
+  
+  acceptedByUserId String?
+  decidedAt        DateTime?
+  
+  shift            HelpdeskShift @relation(fields: [shiftId], references: [id], onDelete: Cascade)
+  offeredBy        User          @relation("SwapOfferedBy", fields: [offeredByUserId], references: [id], onDelete: Cascade)
+  acceptedBy       User?         @relation("SwapAcceptedBy", fields: [acceptedByUserId], references: [id])
+}
+
+// 5) DYNAMIC PC STATUS
+enum PropertyType {
+  BOOLEAN
+  TEXT
+}
+
+model ClassroomPc {
+  id          String   @id @default(uuid())
+  classroomId String
+  label       String   // "PC 1" or just "1"
+  note        String?
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  classroom   Classroom         @relation(fields: [classroomId], references: [id], onDelete: Cascade)
+  values      PcPropertyValue[]
+
+  @@unique([classroomId, label])
+}
+
+model PcProperty {
+  id          String       @id @default(uuid())
+  classroomId String
+  key         String       // "office", "adobe" - unique per classroom
+  label       String       // "Office 2021", "Adobe Suite"
+  type        PropertyType @default(BOOLEAN)
+  order       Int          @default(0)
+
+  classroom   Classroom         @relation(fields: [classroomId], references: [id], onDelete: Cascade)
+  values      PcPropertyValue[]
+
+  @@unique([classroomId, key])
+}
+
+model PcPropertyValue {
+  id          String   @id @default(uuid())
+  pcId        String
+  propertyId  String
+  
+  valueBool   Boolean? // used if property.type == BOOLEAN
+  valueText   String?  // used if property.type == TEXT
+
+  pc          ClassroomPc @relation(fields: [pcId], references: [id], onDelete: Cascade)
+  property    PcProperty  @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+
+  @@unique([pcId, propertyId])
+}

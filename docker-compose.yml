@@ -1,0 +1,46 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:16
+    container_name: school_helpdesk_db
+    environment:
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: school_helpdesk
+    ports:
+      - "5432:5432" # Disabled for production security
+    restart: always
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U admin -d school_helpdesk"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: school_helpdesk_backend
+    user: root # DEV ONLY: Fixes permissions for volume mounts. Prod uses Dockerfile user (node).
+    command: npm run start:dev
+    ports:
+      - "4000:4000"
+    environment:
+      DATABASE_URL: "postgresql://admin:password@postgres:5432/school_helpdesk?schema=public"
+      JWT_SECRET: "super-secret-jwt-key-change-in-prod"
+      JWT_EXPIRATION: "1d"
+      ALLOWED_EMAIL_DOMAIN: "ssakhk.cz"
+    restart: always
+    depends_on:
+      postgres:
+        condition: service_healthy
+    volumes:
+      - ./backend/uploads:/usr/src/app/uploads
+      - ./backend:/usr/src/app
+      - /usr/src/app/node_modules
+
+volumes:
+  postgres_data:

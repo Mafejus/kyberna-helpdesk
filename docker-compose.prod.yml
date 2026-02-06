@@ -1,0 +1,42 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:16
+    container_name: school_helpdesk_db
+    environment:
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: school_helpdesk
+    # ports section completely removed for security
+    restart: always
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U admin -d school_helpdesk"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: school_helpdesk_backend
+    ports:
+      - "4000:4000"
+    environment:
+      DATABASE_URL: "postgresql://admin:${DB_PASSWORD}@postgres:5432/school_helpdesk?schema=public"
+      JWT_SECRET: ${JWT_SECRET}
+      JWT_EXPIRATION: ${JWT_EXPIRATION:-15m}
+      ALLOWED_EMAIL_DOMAIN: "ssakhk.cz"
+      NODE_ENV: "production"
+    restart: always
+    depends_on:
+      postgres:
+        condition: service_healthy
+    volumes:
+      - ./backend/uploads:/usr/src/app/uploads
+
+volumes:
+  postgres_data:

@@ -1,0 +1,13 @@
+
+model UserScore {
+  id        String   @id @default(uuid())
+  points    Int
+  reason    String?
+  createdAt DateTime @default(now())
+  
+  userId    String
+  ticketId  String?  // Optional, if ticket is deleted, this becomes null
+  
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  ticket    Ticket?  @relation(fields: [ticketId], references: [id], onDelete: SetNull)
+}

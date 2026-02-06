@@ -1,0 +1,5 @@
+-- AlterEnum
+ALTER TYPE "NotificationType" ADD VALUE 'SWAP_OFFER_CANCELLED';
+
+-- AlterTable
+ALTER TABLE "User" ADD COLUMN     "passwordUpdatedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP;

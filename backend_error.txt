@@ -1,0 +1,100 @@
+[32m[Nest] 31  - [39m02/05/2026, 10:58:02 AM [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mUploadsModule dependencies initialized[39m[38;5;3m +1ms[39m
+[32m[Nest] 31  - [39m02/05/2026, 10:58:02 AM [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mJwtModule dependencies initialized[39m[38;5;3m +0ms[39m
+[32m[Nest] 31  - [39m02/05/2026, 10:58:02 AM [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mAuditModule dependencies initialized[39m[38;5;3m +0ms[39m
+[32m[Nest] 31  - [39m02/05/2026, 10:58:02 AM [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mUsersModule dependencies initialized[39m[38;5;3m +1ms[39m
+[32m[Nest] 31  - [39m02/05/2026, 10:58:02 AM [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mClassroomsModule dependencies initialized[39m[38;5;3m +0ms[39m
+[32m[Nest] 31  - [39m02/05/2026, 10:58:02 AM [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mStatsModule dependencies initialized[39m[38;5;3m +0ms[39m
+[32m[Nest] 31  - [39m02/05/2026, 10:58:02 AM [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mNotificationPreferencesModule dependencies initialized[39m[38;5;3m +0ms[39m
+[32m[Nest] 31  - [39m02/05/2026, 10:58:02 AM [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mNotificationsModule dependencies initialized[39m[38;5;3m +0ms[39m
+[32m[Nest] 31  - [39m02/05/2026, 10:58:02 AM [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mTicketsModule dependencies initialized[39m[38;5;3m +1ms[39m
+[31m[Nest] 31  - [39m02/05/2026, 10:58:02 AM [31m  ERROR[39m [38;5;3m[ExceptionHandler] [39m[31mNest can't resolve dependencies of the HelpdeskScheduleController (HelpdeskScheduleService, ?, SwapService). Please make sure that the argument CheckInService at index [1] is available in the HelpdeskScheduleModule context.
+
+Potential solutions:
+- Is HelpdeskScheduleModule a valid NestJS module?
+- If CheckInService is a provider, is it part of the current HelpdeskScheduleModule?
+- If CheckInService is exported from a separate @Module, is that module imported within HelpdeskScheduleModule?
+  @Module({
+    imports: [ /* the Module containing CheckInService */ ]
+  })
+[39m
+Error: Nest can't resolve dependencies of the HelpdeskScheduleController (HelpdeskScheduleService, ?, SwapService). Please make sure that the argument CheckInService at index [1] is available in the HelpdeskScheduleModule context.
+
+Potential solutions:
+- Is HelpdeskScheduleModule a valid NestJS module?
+- If CheckInService is a provider, is it part of the current HelpdeskScheduleModule?
+- If CheckInService is exported from a separate @Module, is that module imported within HelpdeskScheduleModule?
+  @Module({
+    imports: [ /* the Module containing CheckInService */ ]
+  })
+
+    at Injector.lookupComponentInParentModules (/usr/src/app/node_modules/@nestjs/core/injector/injector.js:262:19)
+    at async Injector.resolveComponentInstance (/usr/src/app/node_modules/@nestjs/core/injector/injector.js:215:33)
+    at async resolveParam (/usr/src/app/node_modules/@nestjs/core/injector/injector.js:129:38)
+    at async Promise.all (index 1)
+    at async Injector.resolveConstructorParams (/usr/src/app/node_modules/@nestjs/core/injector/injector.js:144:27)
+    at async Injector.loadInstance (/usr/src/app/node_modules/@nestjs/core/injector/injector.js:70:13)
+    at async Injector.loadController (/usr/src/app/node_modules/@nestjs/core/injector/injector.js:89:9)
+    at async /usr/src/app/node_modules/@nestjs/core/injector/instance-loader.js:68:13
+    at async Promise.all (index 0)
+    at async InstanceLoader.createInstancesOfControllers (/usr/src/app/node_modules/@nestjs/core/injector/instance-loader.js:67:9)
+npm error path /usr/src/app
+npm error command failed
+npm error signal SIGTERM
+npm error command sh -c nest start --watch
+npm error A complete log of this run can be found in: /root/.npm/_logs/2026-02-05T10_57_53_299Z-debug-0.log
+
+> school-helpdesk-backend@0.0.1 start:dev
+> nest start --watch
+
+[2J[3J[H[[90m11:02:01 AM[0m] Starting compilation in watch mode...
+
+[[90m11:02:07 AM[0m] Found 0 errors. Watching for file changes.
+
+[32m[Nest] 31  - [39m02/05/2026, 11:02:09 AM [32m    LOG[39m [38;5;3m[NestFactory] [39m[32mStarting Nest application...[39m
+[32m[Nest] 31  - [39m02/05/2026, 11:02:09 AM [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mPrismaModule dependencies initialized[39m[38;5;3m +28ms[39m
+[32m[Nest] 31  - [39m02/05/2026, 11:02:09 AM [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mPassportModule dependencies initialized[39m[38;5;3m +1ms[39m
+[32m[Nest] 31  - [39m02/05/2026, 11:02:09 AM [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mMulterModule dependencies initialized[39m[38;5;3m +0ms[39m
+[32m[Nest] 31  - [39m02/05/2026, 11:02:09 AM [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mThrottlerModule dependencies initialized[39m[38;5;3m +0ms[39m
+[32m[Nest] 31  - [39m02/05/2026, 11:02:09 AM [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mConfigHostModule dependencies initialized[39m[38;5;3m +1ms[39m
+[32m[Nest] 31  - [39m02/05/2026, 11:02:09 AM [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mConfigModule dependencies initialized[39m[38;5;3m +2ms[39m
+[32m[Nest] 31  - [39m02/05/2026, 11:02:09 AM [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mConfigModule dependencies initialized[39m[38;5;3m +0ms[39m
+[32m[Nest] 31  - [39m02/05/2026, 11:02:09 AM [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mAppModule dependencies initialized[39m[38;5;3m +0ms[39m
+[32m[Nest] 31  - [39m02/05/2026, 11:02:09 AM [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mUploadsModule dependencies initialized[39m[38;5;3m +2ms[39m
+[32m[Nest] 31  - [39m02/05/2026, 11:02:09 AM [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mJwtModule dependencies initialized[39m[38;5;3m +0ms[39m
+[32m[Nest] 31  - [39m02/05/2026, 11:02:09 AM [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mAuditModule dependencies initialized[39m[38;5;3m +0ms[39m
+[32m[Nest] 31  - [39m02/05/2026, 11:02:09 AM [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mUsersModule dependencies initialized[39m[38;5;3m +0ms[39m
+[32m[Nest] 31  - [39m02/05/2026, 11:02:09 AM [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mClassroomsModule dependencies initialized[39m[38;5;3m +1ms[39m
+[32m[Nest] 31  - [39m02/05/2026, 11:02:09 AM [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mStatsModule dependencies initialized[39m[38;5;3m +0ms[39m
+[32m[Nest] 31  - [39m02/05/2026, 11:02:09 AM [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mNotificationPreferencesModule dependencies initialized[39m[38;5;3m +0ms[39m
+[32m[Nest] 31  - [39m02/05/2026, 11:02:09 AM [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mNotificationsModule dependencies initialized[39m[38;5;3m +0ms[39m
+[32m[Nest] 31  - [39m02/05/2026, 11:02:09 AM [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mTicketsModule dependencies initialized[39m[38;5;3m +1ms[39m
+[31m[Nest] 31  - [39m02/05/2026, 11:02:09 AM [31m  ERROR[39m [38;5;3m[ExceptionHandler] [39m[31mNest can't resolve dependencies of the HelpdeskScheduleController (HelpdeskScheduleService, ?, SwapService). Please make sure that the argument CheckInService at index [1] is available in the HelpdeskScheduleModule context.
+
+Potential solutions:
+- Is HelpdeskScheduleModule a valid NestJS module?
+- If CheckInService is a provider, is it part of the current HelpdeskScheduleModule?
+- If CheckInService is exported from a separate @Module, is that module imported within HelpdeskScheduleModule?
+  @Module({
+    imports: [ /* the Module containing CheckInService */ ]
+  })
+[39m
+Error: Nest can't resolve dependencies of the HelpdeskScheduleController (HelpdeskScheduleService, ?, SwapService). Please make sure that the argument CheckInService at index [1] is available in the HelpdeskScheduleModule context.
+
+Potential solutions:
+- Is HelpdeskScheduleModule a valid NestJS module?
+- If CheckInService is a provider, is it part of the current HelpdeskScheduleModule?
+- If CheckInService is exported from a separate @Module, is that module imported within HelpdeskScheduleModule?
+  @Module({
+    imports: [ /* the Module containing CheckInService */ ]
+  })
+
+    at Injector.lookupComponentInParentModules (/usr/src/app/node_modules/@nestjs/core/injector/injector.js:262:19)
+    at async Injector.resolveComponentInstance (/usr/src/app/node_modules/@nestjs/core/injector/injector.js:215:33)
+    at async resolveParam (/usr/src/app/node_modules/@nestjs/core/injector/injector.js:129:38)
+    at async Promise.all (index 1)
+    at async Injector.resolveConstructorParams (/usr/src/app/node_modules/@nestjs/core/injector/injector.js:144:27)
+    at async Injector.loadInstance (/usr/src/app/node_modules/@nestjs/core/injector/injector.js:70:13)
+    at async Injector.loadController (/usr/src/app/node_modules/@nestjs/core/injector/injector.js:89:9)
+    at async /usr/src/app/node_modules/@nestjs/core/injector/instance-loader.js:68:13
+    at async Promise.all (index 0)
+    at async InstanceLoader.createInstancesOfControllers (/usr/src/app/node_modules/@nestjs/core/injector/instance-loader.js:67:9)
