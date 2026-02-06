@@ -1,0 +1,90 @@
+# School Helpdesk - Root .gitignore
+# Organized by section as requested
+
+# -----------------
+# Dependencies
+# -----------------
+node_modules/
+.pnpm-store/
+.npm/
+.yarn/
+
+# -----------------
+# Build Outputs
+# -----------------
+dist/
+.next/
+out/
+build/
+backend/dist/
+frontend/.next/
+
+# -----------------
+# Logs & Cache
+# -----------------
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.cache/
+.turbo/
+.eslintcache
+
+# -----------------
+# Secrets & Env Vars (CRITICAL)
+# -----------------
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+.env.production
+*.env
+!.env.example
+
+# -----------------
+# Prisma & Database
+# -----------------
+*.db
+*.sqlite
+*.sqlite3
+*.sqlite-journal
+prisma/dev.db
+prisma/dev.db-journal
+backend/prisma/dev.db
+backend/prisma/migrations/*/migration_lock.toml
+
+# -----------------
+# Uploads & Storage
+# -----------------
+uploads/
+storage/
+tmp/
+temp/
+backend/uploads/
+#!backend/uploads/.gitkeep # Keep directory if needed, but usually we ignore contents
+
+# -----------------
+# IDE & OS Files
+# -----------------
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+!.vscode/extensions.json
+*.swp
+*.swo
+
+# -----------------
+# Testing & Coverage
+# -----------------
+coverage/
+.nyc_output/
+
+# -----------------
+# Docker Local Data
+# -----------------
+postgres_data/
+pgdata/
+data/
+docker-data/
