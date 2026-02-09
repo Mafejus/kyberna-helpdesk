@@ -57,7 +57,7 @@ backend/prisma/migrations/*/migration_lock.toml
 # -----------------
 # Uploads & Storage
 # -----------------
-uploads/
+/uploads/
 storage/
 tmp/
 temp/
