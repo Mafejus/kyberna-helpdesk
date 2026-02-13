@@ -96,7 +96,7 @@ export class TicketsService implements OnModuleInit {
     return ticket;
   }
 
-  async findAll(user: User, status?: TicketStatus, filter?: string, limit = 20, cursor?: string) {
+  async findAll(user: User, status?: TicketStatus, filter?: string, page = 1, limit = 20) {
     const where: any = {};
 
     if (user.role === Role.STUDENT) {
@@ -113,70 +113,34 @@ export class TicketsService implements OnModuleInit {
       where.createdById = user.id;
     }
 
-    // Determine orderBy based on cursor strategy or simple strategy
-    // User asked for: orderBy: { createdAt: "desc" } (respecting priority > dueAt > createdAt)
-    // Complex cursor with multiple sort fields is hard. 
-    // Simplified strategy from user: "pro listy použij 'createdAt desc' (a priority řeš na UI badge)"
-    // OR "pokročilejší: cursor přes composite"
-    
-    // Let's stick effectively to the existing sort order but we need a stable cursor. 
-    // Existing sort: priority desc, status asc, dueAt asc, reportedAt desc.
-    // This is very complex for cursor pagination without composite tokens.
-    
-    // To implement "Simple" approach as suggested by user:
-    // "jednodušší: pro listy použij 'createdAt desc'"
-    
-    // Let's use `createdAt` desc for the main list pagination to ensure stability and performance.
-    // If the user wants specific sorting, we might need a more complex solution, but "TicketDto" doesn't strictly imply strict order.
-    // However, existing findAll had:
-    // orderBy: [
-    //   { priority: 'desc' },
-    //   { status: 'asc' },
-    //   { dueAt: 'asc' },
-    //   { reportedAt: 'desc' },
-    // ],
-    
-    // If we switch to `createdAt: desc`, we lose the priority sorting in the backend. 
-    // The user said: "jednodušší: pro listy použij “createdAt desc” (a priority řeš na UI badge)"
-    // I will follow this advice for the paginated list to avoid cursor hell.
-    
-    const take = Math.min(Math.max(limit, 1), 50) + 1; // Limit + 1 to check for next page
-    
-    const args: any = {
-      where,
-      take,
-      orderBy: { createdAt: 'desc' },
-      include: {
-        classroom: true,
-        createdBy: { select: { fullName: true, email: true } },
-        assignees: {
-          include: { user: { select: { id: true, fullName: true } } },
-          orderBy: { orderIndex: 'asc' },
+    const skip = (page - 1) * limit;
+
+    const [data, total] = await this.prisma.$transaction([
+      this.prisma.ticket.findMany({
+        where,
+        skip,
+        take: limit,
+        orderBy: { createdAt: 'desc' },
+        include: {
+          classroom: true,
+          createdBy: { select: { fullName: true, email: true } },
+          assignees: {
+            include: { user: { select: { id: true, fullName: true } } },
+            orderBy: { orderIndex: 'asc' },
+          },
+          _count: { select: { comments: true } },
         },
-        _count: { select: { comments: true } },
-      },
-    };
-
-    if (cursor) {
-      args.cursor = { id: cursor };
-      args.skip = 1; // Skip the cursor itself
-    }
-
-    const items = await this.prisma.ticket.findMany(args);
-
-    let nextCursor: string | null = null;
-    if (items.length > limit) {
-      const nextItem = items.pop(); // Remove the extra item
-      nextCursor = nextItem!.id;
-    }
-
-    // Note: We are now returning `createdAt` desc. 
-    // If the frontend relies on priority sorting, it might look different now. 
-    // The user explicitly accepted this trade-off.
+      }),
+      this.prisma.ticket.count({ where }),
+    ]);
 
     return {
-      items,
-      nextCursor
+      data,
+      meta: {
+        total,
+        page,
+        lastPage: Math.ceil(total / limit),
+      },
     };
   }
 

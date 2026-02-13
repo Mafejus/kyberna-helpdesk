@@ -30,7 +30,7 @@ async function bootstrap() {
   // Enable CORS
   app.enableCors({
     origin: isProduction 
-      ? ['https://helpdesk.ssakhk.cz'] 
+      ? ['https://helpdesk.ssakhk.cz', process.env.FRONTEND_URL].filter((url): url is string => !!url)
       : [
           'http://localhost:3000',
           /^http:\/\/192\.168\.\d+\.\d+:3000$/,

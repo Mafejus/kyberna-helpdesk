@@ -49,10 +49,10 @@ export class TicketsController {
     @Request() req,
     @Query('status') status?: TicketStatus,
     @Query('filter') filter?: string,
+    @Query('page') page = '1',
     @Query('limit') limit = '20',
-    @Query('cursor') cursor?: string,
   ) {
-    return this.ticketsService.findAll(req.user, status, filter, Number(limit), cursor);
+    return this.ticketsService.findAll(req.user, status, filter, Number(page), Number(limit));
   }
 
   @Get(':id')
