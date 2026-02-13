@@ -1,0 +1,22 @@
+{
+  "name": "school-helpdesk-monorepo",
+  "private": true,
+  "packageManager": "npm@10.5.0",
+  "workspaces": [
+    "backend",
+    "frontend"
+  ],
+  "scripts": {
+    "build": "turbo run build",
+    "dev": "turbo run dev",
+    "start": "turbo run start",
+    "db:deploy": "turbo run db:deploy",
+    "dev:backend": "turbo run dev --filter=backend",
+    "dev:frontend": "turbo run dev --filter=frontend",
+    "build:backend": "turbo run build --filter=backend",
+    "start:backend": "turbo run start --filter=backend"
+  },
+  "devDependencies": {
+    "turbo": "^2.0.0"
+  }
+}
