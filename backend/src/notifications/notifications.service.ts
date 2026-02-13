@@ -17,22 +17,24 @@ export interface CreateNotificationDto {
 export class NotificationsService {
   constructor(
     private prisma: PrismaService,
-    private preferencesService: NotificationPreferencesService
+    private preferencesService: NotificationPreferencesService,
   ) {}
 
   async create(data: CreateNotificationDto) {
     const { userId, type, skipPreferenceCheck, ...dbData } = data;
 
     if (!skipPreferenceCheck) {
-        // Fetch user strictly for Guard checks
-        const user = await this.prisma.user.findUnique({ where: { id: userId } });
-        if (!user) {
-             console.warn(`Attempted to send notification to non-existent user ${userId}`);
-             return null;
-        }
-        
-        const shouldSend = await this.preferencesService.shouldSend(user, type);
-        if (!shouldSend) return null;
+      // Fetch user strictly for Guard checks
+      const user = await this.prisma.user.findUnique({ where: { id: userId } });
+      if (!user) {
+        console.warn(
+          `Attempted to send notification to non-existent user ${userId}`,
+        );
+        return null;
+      }
+
+      const shouldSend = await this.preferencesService.shouldSend(user, type);
+      if (!shouldSend) return null;
     }
 
     return this.prisma.notification.create({
@@ -67,7 +69,7 @@ export class NotificationsService {
   async markAsRead(id: string, userId: string) {
     // Verify ownership
     const notif = await this.prisma.notification.findFirst({
-        where: { id, userId }
+      where: { id, userId },
     });
     if (!notif) return null;
 

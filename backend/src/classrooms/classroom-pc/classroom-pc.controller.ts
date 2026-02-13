@@ -1,4 +1,13 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Patch,
+  Param,
+  Delete,
+  UseGuards,
+} from '@nestjs/common';
 import { ClassroomPcService } from './classroom-pc.service';
 import { JwtAuthGuard } from '../../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../../auth/guards/roles.guard';
@@ -14,25 +23,25 @@ export class ClassroomPcController {
 
   @Get('pc-properties')
   getProperties(@Param('classroomId') classroomId: string) {
-      return this.classroomPcService.getProperties(classroomId);
+    return this.classroomPcService.getProperties(classroomId);
   }
 
   @Post('pc-properties')
   @Roles(Role.ADMIN, Role.TEACHER, Role.STUDENT)
   createProperty(@Param('classroomId') classroomId: string, @Body() body: any) {
-      return this.classroomPcService.createProperty(classroomId, body);
+    return this.classroomPcService.createProperty(classroomId, body);
   }
 
   @Delete('pc-properties/:id')
   @Roles(Role.ADMIN, Role.TEACHER, Role.STUDENT)
   deleteProperty(@Param('id') id: string) {
-      return this.classroomPcService.deleteProperty(id);
+    return this.classroomPcService.deleteProperty(id);
   }
-  
+
   @Patch('pc-properties/reorder')
   @Roles(Role.ADMIN, Role.TEACHER, Role.STUDENT)
-  reorderProperties(@Body() body: { id: string, order: number }[]) {
-      return this.classroomPcService.reorderProperties(body);
+  reorderProperties(@Body() body: { id: string; order: number }[]) {
+    return this.classroomPcService.reorderProperties(body);
   }
 
   // --- PCs (Admin/Teacher/Student) ---
@@ -68,11 +77,11 @@ export class ClassroomPcController {
   remove(@Param('id') id: string) {
     return this.classroomPcService.remove(id);
   }
-  
+
   // Student CAN update values
   @Patch('pcs/:id/values')
   @Roles(Role.ADMIN, Role.TEACHER, Role.STUDENT)
   updateValues(@Param('id') id: string, @Body() body: { values: any[] }) {
-      return this.classroomPcService.updateValues(id, body.values);
+    return this.classroomPcService.updateValues(id, body.values);
   }
 }

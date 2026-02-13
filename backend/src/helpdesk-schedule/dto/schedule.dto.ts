@@ -1,4 +1,13 @@
-import { IsInt, IsISO8601, IsArray, IsUUID, IsString, Min, Max, ArrayMaxSize } from 'class-validator';
+import {
+  IsInt,
+  IsISO8601,
+  IsArray,
+  IsUUID,
+  IsString,
+  Min,
+  Max,
+  ArrayMaxSize,
+} from 'class-validator';
 
 export class ClaimSlotDto {
   @IsISO8601()

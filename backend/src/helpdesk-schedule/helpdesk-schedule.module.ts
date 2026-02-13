@@ -9,7 +9,12 @@ import { PrismaService } from '../prisma/prisma.service';
 
 @Module({
   imports: [NotificationPreferencesModule, PrismaModule],
-  providers: [HelpdeskScheduleService, SwapService, PrismaService, CheckInService],
+  providers: [
+    HelpdeskScheduleService,
+    SwapService,
+    PrismaService,
+    CheckInService,
+  ],
   controllers: [HelpdeskScheduleController],
 })
 export class HelpdeskScheduleModule {}

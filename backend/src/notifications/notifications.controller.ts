@@ -1,4 +1,12 @@
-import { Controller, Get, Post, Param, Query, UseGuards, Request } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Param,
+  Query,
+  UseGuards,
+  Request,
+} from '@nestjs/common';
 import { NotificationsService } from './notifications.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { ApiTags, ApiBearerAuth, ApiOperation } from '@nestjs/swagger';
@@ -12,8 +20,14 @@ export class NotificationsController {
 
   @Get()
   @ApiOperation({ summary: 'Get notifications' })
-  async getNotifications(@Request() req, @Query('unreadOnly') unreadOnly?: string) {
-    return this.notificationsService.findAll(req.user.id, unreadOnly === '1' || unreadOnly === 'true');
+  async getNotifications(
+    @Request() req,
+    @Query('unreadOnly') unreadOnly?: string,
+  ) {
+    return this.notificationsService.findAll(
+      req.user.id,
+      unreadOnly === '1' || unreadOnly === 'true',
+    );
   }
 
   @Get('unread-count')

@@ -148,7 +148,7 @@ export default function NotificationSettingsPage() {
         ) : (
             visibleGroups.map((group, i) => (
             <Card key={i}>
-                <CardHeader pb-2>
+                <CardHeader className="pb-2">
                 <CardTitle className="text-lg">{group.title}</CardTitle>
                 </CardHeader>
                 <CardContent className="grid gap-4 pt-4">

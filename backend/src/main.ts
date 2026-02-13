@@ -1,3 +1,4 @@
+import 'reflect-metadata';
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { ValidationPipe } from '@nestjs/common';
@@ -14,12 +15,12 @@ async function bootstrap() {
   // Security Headers
   app.use(
     helmet({
-      crossOriginResourcePolicy: { policy: "cross-origin" }, // Fixes resource blocking on LAN
+      crossOriginResourcePolicy: { policy: 'cross-origin' }, // Fixes resource blocking on LAN
       contentSecurityPolicy: {
         directives: {
           ...helmet.contentSecurityPolicy.getDefaultDirectives(),
-          "font-src": ["'self'", "data:"],
-          "img-src": ["'self'", "data:", "blob:"], // Common for uploads/previews
+          'font-src': ["'self'", 'data:'],
+          'img-src': ["'self'", 'data:', 'blob:'], // Common for uploads/previews
         },
       },
     }),
@@ -29,8 +30,10 @@ async function bootstrap() {
 
   // Enable CORS
   app.enableCors({
-    origin: isProduction 
-      ? ['https://helpdesk.ssakhk.cz', process.env.FRONTEND_URL].filter((url): url is string => !!url)
+    origin: isProduction
+      ? ['https://helpdesk.ssakhk.cz', process.env.FRONTEND_URL].filter(
+          (url): url is string => !!url,
+        )
       : [
           'http://localhost:3000',
           /^http:\/\/192\.168\.\d+\.\d+:3000$/,
@@ -59,16 +62,16 @@ async function bootstrap() {
   // Swagger (only in dev)
   if (!isProduction) {
     const config = new DocumentBuilder()
-        .setTitle('School Helpdesk API')
-        .setDescription('The School Helpdesk API description')
-        .setVersion('1.0')
-        .addBearerAuth()
-        .build();
+      .setTitle('School Helpdesk API')
+      .setDescription('The School Helpdesk API description')
+      .setVersion('1.0')
+      .addBearerAuth()
+      .build();
     const document = SwaggerModule.createDocument(app, config);
     SwaggerModule.setup('api', app, document);
   }
 
   const port = process.env.PORT || 4000;
-  await app.listen(port, '0.0.0.0');
+  await app.listen(port);
 }
 bootstrap();

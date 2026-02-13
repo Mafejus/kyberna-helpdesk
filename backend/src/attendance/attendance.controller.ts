@@ -13,41 +13,41 @@ export class AttendanceController {
   constructor(private readonly attendanceService: AttendanceService) {}
 
   @Get('summary')
-  async getSummary(
-      @Query('from') from: string,
-      @Query('to') to: string
-  ) {
+  async getSummary(@Query('from') from: string, @Query('to') to: string) {
     return this.attendanceService.getAttendanceSummary(from, to);
   }
 
   @Get('now')
   async getNow() {
-      return this.attendanceService.getCurrentStatus();
+    return this.attendanceService.getCurrentStatus();
   }
 
   @Get('calendar/week')
   async getCalendarWeek(@Query('start') start: string) {
-      return this.attendanceService.getWeekCalendar(start);
+    return this.attendanceService.getWeekCalendar(start);
   }
-  
+
   @Get('export')
   async exportCsv(
-      @Query('from') from: string,
-      @Query('to') to: string,
-      @Res() res: Response
+    @Query('from') from: string,
+    @Query('to') to: string,
+    @Res() res: Response,
   ) {
-      const csv = await this.attendanceService.exportCsv(from, to);
-      res.setHeader('Content-Type', 'text/csv');
-      res.setHeader('Content-Disposition', `attachment; filename="attendance-${from}-${to}.csv"`);
-      res.send(csv);
+    const csv = await this.attendanceService.exportCsv(from, to);
+    res.setHeader('Content-Type', 'text/csv');
+    res.setHeader(
+      'Content-Disposition',
+      `attachment; filename="attendance-${from}-${to}.csv"`,
+    );
+    res.send(csv);
   }
 
   @Get('students/:id')
   async getStudentDetail(
-      @Param('id') id: string,
-      @Query('from') from?: string,
-      @Query('to') to?: string
+    @Param('id') id: string,
+    @Query('from') from?: string,
+    @Query('to') to?: string,
   ) {
-      return this.attendanceService.getStudentAttendance(id, from, to);
+    return this.attendanceService.getStudentAttendance(id, from, to);
   }
 }

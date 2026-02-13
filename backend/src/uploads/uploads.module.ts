@@ -22,8 +22,12 @@ import { extname } from 'path';
         fileSize: 10 * 1024 * 1024, // 10MB
       },
       fileFilter: (req, file, cb) => {
-        if (!file.originalname.match(/\.(jpg|jpeg|png|gif|pdf|doc|docx|xls|xlsx|txt|ppt|pptx)$/)) {
-            return cb(new Error('File type not allowed'), false);
+        if (
+          !file.originalname.match(
+            /\.(jpg|jpeg|png|gif|pdf|doc|docx|xls|xlsx|txt|ppt|pptx)$/,
+          )
+        ) {
+          return cb(new Error('File type not allowed'), false);
         }
         cb(null, true);
       },

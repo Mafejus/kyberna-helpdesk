@@ -1,4 +1,10 @@
-import { Controller, Get, Query, UseGuards, ForbiddenException } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Query,
+  UseGuards,
+  ForbiddenException,
+} from '@nestjs/common';
 import { AuditService } from './audit.service';
 import { Roles } from '../auth/decorators/roles.decorator';
 import { Role } from '@prisma/client';

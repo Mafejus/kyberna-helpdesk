@@ -17,6 +17,6 @@
     "start:backend": "turbo run start --filter=backend"
   },
   "devDependencies": {
-    "turbo": "^2.4.0"
+    "turbo": "latest"
   }
 }

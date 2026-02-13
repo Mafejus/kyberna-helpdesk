@@ -21,10 +21,12 @@ import { AttendanceModule } from './attendance/attendance.module';
 @Module({
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
-    ThrottlerModule.forRoot([{
+    ThrottlerModule.forRoot([
+      {
         ttl: 60000,
         limit: 100, // Global limit: 100 requests per minute
-    }]),
+      },
+    ]),
     PrismaModule,
     AuthModule,
     UsersModule,

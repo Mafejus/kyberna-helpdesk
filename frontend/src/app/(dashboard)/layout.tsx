@@ -118,7 +118,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       )}
 
       {/* Main Content */}
-      <main className="flex-1 overflow-y-auto bg-gray-50/50 p-4 md:p-8 dark:bg-gray-900/50">
+      <main className="flex-1 overflow-y-auto bg-muted/20 p-4 md:p-8">
           {children}
       </main>
     </div>

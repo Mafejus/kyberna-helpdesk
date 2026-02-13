@@ -30,7 +30,11 @@ export class UsersController {
 
   @Patch('me/password')
   async changePassword(@Request() req, @Body() body: ChangePasswordDto) {
-    return this.usersService.changePassword(req.user.id, body.currentPassword, body.newPassword);
+    return this.usersService.changePassword(
+      req.user.id,
+      body.currentPassword,
+      body.newPassword,
+    );
   }
 
   @Post()

@@ -39,8 +39,15 @@ export class AuditService {
     action?: AuditAction;
     userId?: string; // Filter by actor
   }) {
-    const { cursor, take: limitRaw, entityType, entityId, action, userId } = params;
-    
+    const {
+      cursor,
+      take: limitRaw,
+      entityType,
+      entityId,
+      action,
+      userId,
+    } = params;
+
     const limit = limitRaw || 20;
     const take = Math.min(Math.max(limit, 1), 50) + 1;
 
@@ -64,13 +71,13 @@ export class AuditService {
 
     let nextCursor: string | null = null;
     if (items.length > limit) {
-        const nextItem = items.pop();
-        nextCursor = nextItem!.id;
+      const nextItem = items.pop();
+      nextCursor = nextItem!.id;
     }
 
     return {
-        items,
-        nextCursor
+      items,
+      nextCursor,
     };
   }
 

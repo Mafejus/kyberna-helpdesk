@@ -33,13 +33,13 @@ export class StatsService {
   async getTicketStats(userId: string) {
     // 1. Total Points from UserScore
     const stats = await this.prisma.userScore.aggregate({
-        where: { userId },
-        _sum: { points: true }
+      where: { userId },
+      _sum: { points: true },
     });
 
     // 2. Approved Count (positive scores)
     const approvedCount = await this.prisma.userScore.count({
-        where: { userId, points: { gt: 0 } }
+      where: { userId, points: { gt: 0 } },
     });
 
     return {
@@ -89,8 +89,8 @@ export class StatsService {
       },
       orderBy: {
         _count: {
-            id: 'desc'
-        }
+          id: 'desc',
+        },
       },
       take: 10,
     });
@@ -122,27 +122,27 @@ export class StatsService {
     const leaderboard = [];
 
     for (const student of students) {
-        const scoreStats = await this.prisma.userScore.aggregate({
-            where: { userId: student.id },
-            _sum: { points: true },
-            _count: { _all: true }
+      const scoreStats = await this.prisma.userScore.aggregate({
+        where: { userId: student.id },
+        _sum: { points: true },
+        _count: { _all: true },
+      });
+
+      // Count "Solved Tickets" as positive score entries
+      const solvedCount = await this.prisma.userScore.count({
+        where: { userId: student.id, points: { gt: 0 } },
+      });
+
+      const totalPoints = scoreStats._sum.points || 0;
+
+      if (scoreStats._count._all > 0) {
+        leaderboard.push({
+          userId: student.id,
+          fullName: student.fullName,
+          points: totalPoints,
+          approvedCount: solvedCount,
         });
-
-        // Count "Solved Tickets" as positive score entries
-        const solvedCount = await this.prisma.userScore.count({
-            where: { userId: student.id, points: { gt: 0 } }
-        });
-
-        const totalPoints = scoreStats._sum.points || 0;
-
-        if (scoreStats._count._all > 0) {
-            leaderboard.push({
-                userId: student.id,
-                fullName: student.fullName,
-                points: totalPoints,
-                approvedCount: solvedCount
-            });
-        }
+      }
     }
 
     return leaderboard.sort((a, b) => b.points - a.points).slice(0, 50);

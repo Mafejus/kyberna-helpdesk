@@ -16,11 +16,11 @@ export class CheckInEndDto {
 }
 
 export class SwapCreateDto {
-    @IsISO8601()
-    date: string; // YYYY-MM-DD
+  @IsISO8601()
+  date: string; // YYYY-MM-DD
 
-    @IsInt()
-    @Min(1)
-    @Max(12)
-    lesson: number;
+  @IsInt()
+  @Min(1)
+  @Max(12)
+  lesson: number;
 }

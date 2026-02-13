@@ -52,7 +52,13 @@ export class TicketsController {
     @Query('page') page = '1',
     @Query('limit') limit = '20',
   ) {
-    return this.ticketsService.findAll(req.user, status, filter, Number(page), Number(limit));
+    return this.ticketsService.findAll(
+      req.user,
+      status,
+      filter,
+      Number(page),
+      Number(limit),
+    );
   }
 
   @Get(':id')
@@ -116,7 +122,11 @@ export class TicketsController {
 
   @Post(':id/assignees')
   @Roles(Role.ADMIN)
-  manageAssignees(@Request() req, @Param('id') id: string, @Body() dto: ManageAssigneesDto) {
+  manageAssignees(
+    @Request() req,
+    @Param('id') id: string,
+    @Body() dto: ManageAssigneesDto,
+  ) {
     return this.ticketsService.manageAssignees(id, dto, req.user);
   }
 

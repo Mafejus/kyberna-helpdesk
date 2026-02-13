@@ -99,8 +99,8 @@ export class UsersService {
 
     const passwordHash = await bcrypt.hash(newPass, 12);
     await this.prisma.user.update({
-        where: { id: userId },
-        data: { passwordHash, passwordUpdatedAt: new Date() }
+      where: { id: userId },
+      data: { passwordHash, passwordUpdatedAt: new Date() },
     });
 
     return { success: true };

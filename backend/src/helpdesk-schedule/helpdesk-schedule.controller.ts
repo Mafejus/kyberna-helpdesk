@@ -1,4 +1,13 @@
-import { Controller, Get, Post, Body, Query, UseGuards, Request, Param } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Query,
+  UseGuards,
+  Request,
+  Param,
+} from '@nestjs/common';
 import { HelpdeskScheduleService } from './helpdesk-schedule.service';
 import { CheckInService } from './check-in.service';
 import { SwapService } from './swap.service';
@@ -7,7 +16,11 @@ import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
 import { Role } from '@prisma/client';
 import { ClaimSlotDto, SetSlotDto, RemoveStudentDto } from './dto/schedule.dto';
-import { CheckInStartDto, CheckInEndDto, SwapCreateDto } from './dto/check-in-swap.dto';
+import {
+  CheckInStartDto,
+  CheckInEndDto,
+  SwapCreateDto,
+} from './dto/check-in-swap.dto';
 
 @Controller('schedule')
 @UseGuards(JwtAuthGuard, RolesGuard)
@@ -15,7 +28,7 @@ export class HelpdeskScheduleController {
   constructor(
     private readonly scheduleService: HelpdeskScheduleService,
     private readonly checkInService: CheckInService,
-    private readonly swapService: SwapService
+    private readonly swapService: SwapService,
   ) {}
 
   @Get('week')
@@ -42,7 +55,7 @@ export class HelpdeskScheduleController {
   @Get('checkin/me')
   @Roles(Role.STUDENT)
   getMyCheckIn(@Request() req) {
-      return this.checkInService.getUserActiveCheckIn(req.user.id);
+    return this.checkInService.getUserActiveCheckIn(req.user.id);
   }
 
   @Post('checkin/end')
@@ -55,25 +68,25 @@ export class HelpdeskScheduleController {
 
   @Get('swaps')
   listSwaps(@Query('week') week?: string) {
-      return this.swapService.listOffers(week);
+    return this.swapService.listOffers(week);
   }
 
   @Post('swaps') // create offer
   @Roles(Role.STUDENT)
   createSwap(@Request() req, @Body() dto: SwapCreateDto) {
-      return this.swapService.createOffer(req.user, dto.date, dto.lesson);
+    return this.swapService.createOffer(req.user, dto.date, dto.lesson);
   }
 
   @Post('swaps/:id/accept')
   @Roles(Role.STUDENT)
   acceptSwap(@Request() req, @Param('id') id: string) {
-      return this.swapService.acceptOffer(req.user, id);
+    return this.swapService.acceptOffer(req.user, id);
   }
 
   @Post('swaps/:id/cancel')
   @Roles(Role.STUDENT, Role.ADMIN)
   cancelSwap(@Request() req, @Param('id') id: string) {
-      return this.swapService.cancelOffer(req.user, id);
+    return this.swapService.cancelOffer(req.user, id);
   }
 
   // --- EXISTING ---
@@ -92,14 +105,23 @@ export class HelpdeskScheduleController {
 
   @Post('admin/set')
   @Roles(Role.ADMIN)
-  adminSet(@Body() dto: SetSlotDto) { // Missing user for audit? Should add req.user
+  adminSet(@Body() dto: SetSlotDto) {
+    // Missing user for audit? Should add req.user
     // Fix: Pass undefined user for now or update service signature later
-    return this.scheduleService.adminSetSlot(dto.date, dto.lesson, dto.studentIds);
+    return this.scheduleService.adminSetSlot(
+      dto.date,
+      dto.lesson,
+      dto.studentIds,
+    );
   }
 
   @Post('admin/remove')
   @Roles(Role.ADMIN)
   adminRemove(@Body() dto: RemoveStudentDto) {
-    return this.scheduleService.adminRemoveSlot(dto.date, dto.lesson, dto.studentId);
+    return this.scheduleService.adminRemoveSlot(
+      dto.date,
+      dto.lesson,
+      dto.studentId,
+    );
   }
 }

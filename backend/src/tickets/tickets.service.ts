@@ -7,7 +7,16 @@ import {
 } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateTicketDto } from './dto/create-ticket.dto';
-import { User, Role, TicketStatus, Priority, TicketAssignee, AuditAction, AuditEntityType, NotificationType } from '@prisma/client';
+import {
+  User,
+  Role,
+  TicketStatus,
+  Priority,
+  TicketAssignee,
+  AuditAction,
+  AuditEntityType,
+  NotificationType,
+} from '@prisma/client';
 import {
   ApproveTicketDto,
   AssignTicketDto,
@@ -26,43 +35,45 @@ export class TicketsService implements OnModuleInit {
   constructor(
     private prisma: PrismaService,
     private auditService: AuditService,
-    private notificationsService: NotificationsService
+    private notificationsService: NotificationsService,
   ) {}
 
   async onModuleInit() {
     // Migration: CRITICAL -> HIGH
     await this.prisma.ticket.updateMany({
-        where: { priority: 'CRITICAL' },
-        data: { priority: 'HIGH' }
+      where: { priority: 'CRITICAL' },
+      data: { priority: 'HIGH' },
     });
 
     // Migration: Backfill dueAt for existing tickets
     const ticketsWithoutDue = await this.prisma.ticket.findMany({
       where: { dueAt: null },
-      select: { id: true, createdAt: true }
+      select: { id: true, createdAt: true },
     });
-    
+
     if (ticketsWithoutDue.length > 0) {
-      console.log(`[Migration] Backfilling dueAt for ${ticketsWithoutDue.length} tickets...`);
+      console.log(
+        `[Migration] Backfilling dueAt for ${ticketsWithoutDue.length} tickets...`,
+      );
       for (const t of ticketsWithoutDue) {
-          const due = new Date(t.createdAt);
-          due.setDate(due.getDate() + 7);
-          await this.prisma.ticket.update({
-              where: { id: t.id },
-              data: { dueAt: due }
-          });
+        const due = new Date(t.createdAt);
+        due.setDate(due.getDate() + 7);
+        await this.prisma.ticket.update({
+          where: { id: t.id },
+          data: { dueAt: due },
+        });
       }
       console.log(`[Migration] Backfilled.`);
     }
   }
 
   async create(user: User, dto: CreateTicketDto) {
-
-
-    const attachmentsData = dto.attachments ? dto.attachments.map((a) => ({
-      ...a,
-      uploadedById: user.id,
-    })) : [];
+    const attachmentsData = dto.attachments
+      ? dto.attachments.map((a) => ({
+          ...a,
+          uploadedById: user.id,
+        }))
+      : [];
 
     const defaultDueAt = new Date();
     defaultDueAt.setDate(defaultDueAt.getDate() + 7);
@@ -90,19 +101,25 @@ export class TicketsService implements OnModuleInit {
       entityId: ticket.id,
       action: AuditAction.TICKET_CREATED,
       message: `Ticket created`,
-      after: { title: ticket.title, priority: ticket.priority }
+      after: { title: ticket.title, priority: ticket.priority },
     });
 
     return ticket;
   }
 
-  async findAll(user: User, status?: TicketStatus, filter?: string, page = 1, limit = 20) {
+  async findAll(
+    user: User,
+    status?: TicketStatus,
+    filter?: string,
+    page = 1,
+    limit = 20,
+  ) {
     const where: any = {};
 
     if (user.role === Role.STUDENT) {
-       if (filter === 'assigned') {
-          where.assignees = { some: { userId: user.id } };
-       } 
+      if (filter === 'assigned') {
+        where.assignees = { some: { userId: user.id } };
+      }
     }
 
     if (status) {
@@ -158,7 +175,9 @@ export class TicketsService implements OnModuleInit {
         },
         attachments: true,
         comments: {
-          include: { author: { select: { id: true, fullName: true, role: true } } },
+          include: {
+            author: { select: { id: true, fullName: true, role: true } },
+          },
           orderBy: { createdAt: 'asc' },
         },
       },
@@ -174,7 +193,7 @@ export class TicketsService implements OnModuleInit {
     //     const isAssigned = ticket.assignees.some(a => a.userId === user.id);
     //     const isUnassigned = ticket.status === TicketStatus.UNASSIGNED;
     //     const isRejected = ticket.status === TicketStatus.REJECTED;
-        
+
     //     // Allow access if assigned, unassigned (open pool), or rejected (rework pool)
     //     if (!isAssigned && !isUnassigned && !isRejected) {
     //          throw new ForbiddenException('You do not have permission to view this ticket');
@@ -225,7 +244,7 @@ export class TicketsService implements OnModuleInit {
         entityId: id,
         action: AuditAction.TICKET_ASSIGNEE_ADDED,
         message: 'Student claimed ticket',
-        after: { assigneeId: user.id, status: TicketStatus.IN_PROGRESS }
+        after: { assigneeId: user.id, status: TicketStatus.IN_PROGRESS },
       });
 
       return this.findOne(id, user);
@@ -251,7 +270,10 @@ export class TicketsService implements OnModuleInit {
         throw new BadRequestException('Already assigned');
       }
 
-      const maxOrder = ticket.assignees.reduce((max, a) => Math.max(max, a.orderIndex), 0);
+      const maxOrder = ticket.assignees.reduce(
+        (max, a) => Math.max(max, a.orderIndex),
+        0,
+      );
 
       await tx.ticketAssignee.create({
         data: {
@@ -270,7 +292,7 @@ export class TicketsService implements OnModuleInit {
         entityId: id,
         action: AuditAction.TICKET_ASSIGNEE_ADDED,
         message: 'Student joined ticket',
-        after: { assigneeId: user.id }
+        after: { assigneeId: user.id },
       });
 
       return this.findOne(id, user);
@@ -281,10 +303,13 @@ export class TicketsService implements OnModuleInit {
     if (user.role !== Role.STUDENT) throw new ForbiddenException();
 
     return this.prisma.$transaction(async (tx) => {
-      const ticket = await tx.ticket.findUnique({where: {id}, include: { assignees: true }});
+      const ticket = await tx.ticket.findUnique({
+        where: { id },
+        include: { assignees: true },
+      });
       if (!ticket) throw new NotFoundException();
 
-      const assignee = ticket.assignees.find(a => a.userId === user.id);
+      const assignee = ticket.assignees.find((a) => a.userId === user.id);
       if (!assignee) throw new BadRequestException('Not assigned');
 
       await tx.ticketAssignee.delete({
@@ -292,7 +317,9 @@ export class TicketsService implements OnModuleInit {
       });
 
       // Reorder and update status if empty
-      const remaining = await tx.ticketAssignee.count({ where: { ticketId: id } });
+      const remaining = await tx.ticketAssignee.count({
+        where: { ticketId: id },
+      });
       let newStatus = ticket.status;
       if (remaining === 0) {
         newStatus = TicketStatus.UNASSIGNED;
@@ -301,21 +328,23 @@ export class TicketsService implements OnModuleInit {
           data: { status: TicketStatus.UNASSIGNED },
         });
       } else {
-          // Reorder logic helper - simplified here or reused
-          const others = await tx.ticketAssignee.findMany({
-             where: { ticketId: id },
-             orderBy: { orderIndex: 'asc' },
-          });
-          for (let i = 0; i < others.length; i++) {
-             if (others[i].orderIndex !== i + 1) {
-                 await tx.ticketAssignee.update({
-                     where: { ticketId_userId: { ticketId: id, userId: others[i].userId } },
-                     data: { orderIndex: i + 1 }
-                 });
-             }
+        // Reorder logic helper - simplified here or reused
+        const others = await tx.ticketAssignee.findMany({
+          where: { ticketId: id },
+          orderBy: { orderIndex: 'asc' },
+        });
+        for (let i = 0; i < others.length; i++) {
+          if (others[i].orderIndex !== i + 1) {
+            await tx.ticketAssignee.update({
+              where: {
+                ticketId_userId: { ticketId: id, userId: others[i].userId },
+              },
+              data: { orderIndex: i + 1 },
+            });
           }
+        }
       }
-      
+
       // Audit
       await this.auditService.log({
         actorUserId: user.id,
@@ -325,7 +354,7 @@ export class TicketsService implements OnModuleInit {
         entityId: id,
         action: AuditAction.TICKET_ASSIGNEE_REMOVED,
         message: 'Student left ticket',
-        after: { status: newStatus }
+        after: { status: newStatus },
       });
 
       return { message: 'Left ticket' };
@@ -341,8 +370,13 @@ export class TicketsService implements OnModuleInit {
     if (!ticket.assignees.some((a) => a.userId === user.id))
       throw new ForbiddenException('Not assigned');
 
-    if (ticket.status !== TicketStatus.IN_PROGRESS && ticket.status !== TicketStatus.REJECTED) {
-      throw new BadRequestException('Ticket must be IN_PROGRESS or REJECTED to mark done');
+    if (
+      ticket.status !== TicketStatus.IN_PROGRESS &&
+      ticket.status !== TicketStatus.REJECTED
+    ) {
+      throw new BadRequestException(
+        'Ticket must be IN_PROGRESS or REJECTED to mark done',
+      );
     }
 
     const updated = await this.prisma.ticket.update({
@@ -363,31 +397,33 @@ export class TicketsService implements OnModuleInit {
       action: AuditAction.TICKET_MARKED_DONE,
       message: 'Student marked ticket as done',
       before: { status: ticket.status },
-      after: { status: TicketStatus.DONE_WAITING_APPROVAL, note: dto.note }
+      after: { status: TicketStatus.DONE_WAITING_APPROVAL, note: dto.note },
     });
 
     // Notifications
     // 1. Notify Teacher (Reporter)
     await this.notificationsService.create({
-        userId: ticket.createdById,
-        type: NotificationType.TICKET_WAITING_APPROVAL,
-        title: 'Ticket dokončen',
-        body: `Ticket "${ticket.title}" čeká na schválení.`,
-        linkUrl: `/tickets/${id}`,
-        metadata: { ticketId: id }
+      userId: ticket.createdById,
+      type: NotificationType.TICKET_WAITING_APPROVAL,
+      title: 'Ticket dokončen',
+      body: `Ticket "${ticket.title}" čeká na schválení.`,
+      linkUrl: `/tickets/${id}`,
+      metadata: { ticketId: id },
     });
-    
+
     // 2. Notify Admin
-    const admins = await this.prisma.user.findMany({ where: { role: Role.ADMIN } });
+    const admins = await this.prisma.user.findMany({
+      where: { role: Role.ADMIN },
+    });
     for (const admin of admins) {
-        await this.notificationsService.create({
-            userId: admin.id,
-            type: NotificationType.TICKET_WAITING_APPROVAL,
-            title: 'Ticket dokončen (Admin)',
-            body: `Student dokončil ticket "${ticket.title}".`,
-            linkUrl: `/tickets/${id}`,
-            metadata: { ticketId: id }
-        });
+      await this.notificationsService.create({
+        userId: admin.id,
+        type: NotificationType.TICKET_WAITING_APPROVAL,
+        title: 'Ticket dokončen (Admin)',
+        body: `Student dokončil ticket "${ticket.title}".`,
+        linkUrl: `/tickets/${id}`,
+        metadata: { ticketId: id },
+      });
     }
 
     return updated;
@@ -395,11 +431,16 @@ export class TicketsService implements OnModuleInit {
 
   async approve(id: string, user: User, dto: ApproveTicketDto) {
     if (user.role !== Role.ADMIN) throw new ForbiddenException();
-    
-    const ticket = await this.prisma.ticket.findUnique({ where: { id }, include: { assignees: true } });
+
+    const ticket = await this.prisma.ticket.findUnique({
+      where: { id },
+      include: { assignees: true },
+    });
     if (!ticket) throw new NotFoundException('Ticket not found');
     if (ticket.status !== TicketStatus.DONE_WAITING_APPROVAL) {
-      throw new BadRequestException('Ticket must be in DONE_WAITING_APPROVAL status');
+      throw new BadRequestException(
+        'Ticket must be in DONE_WAITING_APPROVAL status',
+      );
     }
 
     const updated = await this.prisma.ticket.update({
@@ -412,16 +453,16 @@ export class TicketsService implements OnModuleInit {
     });
 
     // Reward Points (UserScore)
-    const primaryAssignee = ticket.assignees.find(a => a.orderIndex === 1);
+    const primaryAssignee = ticket.assignees.find((a) => a.orderIndex === 1);
     if (primaryAssignee) {
-         await this.prisma.userScore.create({
-             data: {
-                 ticketId: id,
-                 userId: primaryAssignee.userId,
-                 points: dto.difficultyPoints,
-                 reason: `Vyřešení: ${ticket.title}`
-             }
-         });
+      await this.prisma.userScore.create({
+        data: {
+          ticketId: id,
+          userId: primaryAssignee.userId,
+          points: dto.difficultyPoints,
+          reason: `Vyřešení: ${ticket.title}`,
+        },
+      });
     }
 
     // Audit
@@ -434,29 +475,29 @@ export class TicketsService implements OnModuleInit {
       action: AuditAction.TICKET_APPROVED,
       message: 'Ticket approved',
       before: { status: ticket.status },
-      after: { status: TicketStatus.APPROVED, points: dto.difficultyPoints }
+      after: { status: TicketStatus.APPROVED, points: dto.difficultyPoints },
     });
 
     // Notify: All Assignees
     for (const assignee of ticket.assignees) {
-        await this.notificationsService.create({
-            userId: assignee.userId,
-            type: NotificationType.TICKET_APPROVED,
-            title: 'Tvůj ticket byl schválen!',
-            body: `Admin schválil ticket "${ticket.title}" (+${dto.difficultyPoints} b).`,
-            linkUrl: `/tickets/${id}`,
-            metadata: { ticketId: id }
-        });
+      await this.notificationsService.create({
+        userId: assignee.userId,
+        type: NotificationType.TICKET_APPROVED,
+        title: 'Tvůj ticket byl schválen!',
+        body: `Admin schválil ticket "${ticket.title}" (+${dto.difficultyPoints} b).`,
+        linkUrl: `/tickets/${id}`,
+        metadata: { ticketId: id },
+      });
     }
 
     // Notify: Teacher
     await this.notificationsService.create({
-        userId: ticket.createdById,
-        type: NotificationType.TICKET_APPROVED,
-        title: 'Váš ticket je hotov',
-        body: `Ticket "${ticket.title}" byl schválen adminem.`,
-        linkUrl: `/tickets/${id}`,
-        metadata: { ticketId: id }
+      userId: ticket.createdById,
+      type: NotificationType.TICKET_APPROVED,
+      title: 'Váš ticket je hotov',
+      body: `Ticket "${ticket.title}" byl schválen adminem.`,
+      linkUrl: `/tickets/${id}`,
+      metadata: { ticketId: id },
     });
 
     return updated;
@@ -466,12 +507,17 @@ export class TicketsService implements OnModuleInit {
     if (user.role !== Role.ADMIN) throw new ForbiddenException();
 
     return this.prisma.$transaction(async (tx) => {
-      const ticket = await tx.ticket.findUnique({ where: { id }, include: { assignees: true } });
+      const ticket = await tx.ticket.findUnique({
+        where: { id },
+        include: { assignees: true },
+      });
       if (!ticket) throw new NotFoundException('Ticket not found');
 
       // Strict status check for idempotency
       if (ticket.status !== TicketStatus.DONE_WAITING_APPROVAL) {
-        throw new BadRequestException('Ticket must be in DONE_WAITING_APPROVAL status to be rejected');
+        throw new BadRequestException(
+          'Ticket must be in DONE_WAITING_APPROVAL status to be rejected',
+        );
       }
 
       const updated = await tx.ticket.update({
@@ -484,17 +530,19 @@ export class TicketsService implements OnModuleInit {
 
       // Handle Penalty
       if (dto.penaltyPoints) {
-          const primaryAssignee = ticket.assignees.find(a => a.orderIndex === 1);
-          if (primaryAssignee) {
-              await tx.userScore.create({
-                  data: {
-                      ticketId: id,
-                      userId: primaryAssignee.userId,
-                      points: -Math.abs(dto.penaltyPoints), // Ensure negative
-                      reason: `Penalizace: ${ticket.title}`
-                  }
-              });
-          }
+        const primaryAssignee = ticket.assignees.find(
+          (a) => a.orderIndex === 1,
+        );
+        if (primaryAssignee) {
+          await tx.userScore.create({
+            data: {
+              ticketId: id,
+              userId: primaryAssignee.userId,
+              points: -Math.abs(dto.penaltyPoints), // Ensure negative
+              reason: `Penalizace: ${ticket.title}`,
+            },
+          });
+        }
       }
 
       // Audit
@@ -507,30 +555,37 @@ export class TicketsService implements OnModuleInit {
         action: AuditAction.TICKET_REJECTED,
         message: 'Ticket returned/rejected',
         before: { status: ticket.status },
-        after: { status: TicketStatus.REJECTED, note: dto.adminApprovalNote, penalty: dto.penaltyPoints }
+        after: {
+          status: TicketStatus.REJECTED,
+          note: dto.adminApprovalNote,
+          penalty: dto.penaltyPoints,
+        },
       });
 
       // Notify: Assignees
       for (const assignee of ticket.assignees) {
-          const penaltyText = assignee.orderIndex === 1 && dto.penaltyPoints ? ` (Penalizace: -${dto.penaltyPoints} b)` : '';
-          await this.notificationsService.create({
-              userId: assignee.userId,
-              type: NotificationType.TICKET_RETURNED,
-              title: 'Ticket vrácen k dopracování',
-              body: `Admin vrátil ticket "${ticket.title}". Důvod: ${dto.adminApprovalNote}${penaltyText}`,
-              linkUrl: `/tickets/${id}`,
-              metadata: { ticketId: id }
-          });
+        const penaltyText =
+          assignee.orderIndex === 1 && dto.penaltyPoints
+            ? ` (Penalizace: -${dto.penaltyPoints} b)`
+            : '';
+        await this.notificationsService.create({
+          userId: assignee.userId,
+          type: NotificationType.TICKET_RETURNED,
+          title: 'Ticket vrácen k dopracování',
+          body: `Admin vrátil ticket "${ticket.title}". Důvod: ${dto.adminApprovalNote}${penaltyText}`,
+          linkUrl: `/tickets/${id}`,
+          metadata: { ticketId: id },
+        });
       }
 
       // Notify: Teacher
       await this.notificationsService.create({
-          userId: ticket.createdById,
-          type: NotificationType.TICKET_RETURNED,
-          title: 'Ticket nebyl schválen (vrácen)',
-          body: `Ticket "${ticket.title}" byl vrácen studentům.`,
-          linkUrl: `/tickets/${id}`,
-          metadata: { ticketId: id }
+        userId: ticket.createdById,
+        type: NotificationType.TICKET_RETURNED,
+        title: 'Ticket nebyl schválen (vrácen)',
+        body: `Ticket "${ticket.title}" byl vrácen studentům.`,
+        linkUrl: `/tickets/${id}`,
+        metadata: { ticketId: id },
       });
 
       return updated;
@@ -538,11 +593,17 @@ export class TicketsService implements OnModuleInit {
   }
 
   async setPriority(id: string, priority: Priority, user: User) {
-    const ticket = await this.prisma.ticket.findUnique({where: {id}, include: {assignees: true}});
+    const ticket = await this.prisma.ticket.findUnique({
+      where: { id },
+      include: { assignees: true },
+    });
     if (!ticket) throw new NotFoundException();
 
-    const updated = await this.prisma.ticket.update({ where: { id }, data: { priority } });
-    
+    const updated = await this.prisma.ticket.update({
+      where: { id },
+      data: { priority },
+    });
+
     // Audit
     await this.auditService.log({
       actorUserId: user.id,
@@ -553,19 +614,19 @@ export class TicketsService implements OnModuleInit {
       action: AuditAction.TICKET_PRIORITY_CHANGED,
       message: 'Priority changed',
       before: { priority: ticket.priority },
-      after: { priority: priority }
+      after: { priority: priority },
     });
 
     // Notify: Assignees
     for (const assignee of ticket.assignees) {
-        await this.notificationsService.create({
-            userId: assignee.userId,
-            type: NotificationType.TICKET_PRIORITY_CHANGED,
-            title: 'Změna priority',
-            body: `Priorita ticketu "${ticket.title}" změněna na ${priority}.`,
-            linkUrl: `/tickets/${id}`,
-            metadata: { ticketId: id }
-        });
+      await this.notificationsService.create({
+        userId: assignee.userId,
+        type: NotificationType.TICKET_PRIORITY_CHANGED,
+        title: 'Změna priority',
+        body: `Priorita ticketu "${ticket.title}" změněna na ${priority}.`,
+        linkUrl: `/tickets/${id}`,
+        metadata: { ticketId: id },
+      });
     }
 
     return updated;
@@ -586,8 +647,11 @@ export class TicketsService implements OnModuleInit {
       if (dto.action === AssigneeAction.ADD) {
         if (ticket.assignees.some((a) => a.userId === dto.userId))
           throw new BadRequestException('User already assigned');
-          
-        const maxOrder = ticket.assignees.reduce((max, a) => Math.max(max, a.orderIndex), 0);
+
+        const maxOrder = ticket.assignees.reduce(
+          (max, a) => Math.max(max, a.orderIndex),
+          0,
+        );
         await tx.ticketAssignee.create({
           data: { ticketId, userId: dto.userId, orderIndex: maxOrder + 1 },
         });
@@ -598,11 +662,10 @@ export class TicketsService implements OnModuleInit {
             data: { status: TicketStatus.IN_PROGRESS },
           });
         }
-        
+
         actionLogged = AuditAction.TICKET_ASSIGNEE_ADDED;
         notificationUserId = dto.userId;
         notificationType = NotificationType.TICKET_ASSIGNED;
-        
       } else if (dto.action === AssigneeAction.REMOVE) {
         const assignee = ticket.assignees.find((a) => a.userId === dto.userId);
         if (!assignee) throw new BadRequestException('User not assigned');
@@ -612,13 +675,18 @@ export class TicketsService implements OnModuleInit {
         });
 
         // Reorder logic (simplified copy)
-        const remaining = ticket.assignees.filter((a) => a.userId !== dto.userId);
+        const remaining = ticket.assignees.filter(
+          (a) => a.userId !== dto.userId,
+        );
         if (remaining.length === 0) {
-            await tx.ticket.update({ where: { id: ticketId }, data: { status: TicketStatus.UNASSIGNED } });
+          await tx.ticket.update({
+            where: { id: ticketId },
+            data: { status: TicketStatus.UNASSIGNED },
+          });
         } else {
-            // Reorder remaining 
-            // In transaction, simple manual reorder loop isn't shown here for brevity but assuming kept from original
-            // Just updating flag for audit
+          // Reorder remaining
+          // In transaction, simple manual reorder loop isn't shown here for brevity but assuming kept from original
+          // Just updating flag for audit
         }
 
         actionLogged = AuditAction.TICKET_ASSIGNEE_REMOVED;
@@ -628,29 +696,33 @@ export class TicketsService implements OnModuleInit {
 
       // Commit Audit & Notify
       if (actionLogged) {
-          await this.auditService.log({
-              actorUserId: user.id,
-              actorRole: user.role,
-              actorName: user.fullName,
-              entityType: AuditEntityType.TICKET,
-              entityId: ticketId,
-              action: actionLogged,
-              message: `Admin managed assignees: ${dto.action}`,
-              after: { userId: dto.userId }
-          });
+        await this.auditService.log({
+          actorUserId: user.id,
+          actorRole: user.role,
+          actorName: user.fullName,
+          entityType: AuditEntityType.TICKET,
+          entityId: ticketId,
+          action: actionLogged,
+          message: `Admin managed assignees: ${dto.action}`,
+          after: { userId: dto.userId },
+        });
       }
-      
+
       if (notificationUserId && notificationType) {
-          await this.notificationsService.create({
-              userId: notificationUserId,
-              type: notificationType,
-              title: notificationType === NotificationType.TICKET_ASSIGNED ? 'Nový úkol' : 'Odebrán z úkolu',
-              body: notificationType === NotificationType.TICKET_ASSIGNED 
-                    ? `Byl jsi přidán k ticketu "${ticket.title}".` 
-                    : `Byl jsi odebrán z ticketu "${ticket.title}".`,
-              linkUrl: `/dashboard/tickets/${ticketId}`,
-              metadata: { ticketId }
-          });
+        await this.notificationsService.create({
+          userId: notificationUserId,
+          type: notificationType,
+          title:
+            notificationType === NotificationType.TICKET_ASSIGNED
+              ? 'Nový úkol'
+              : 'Odebrán z úkolu',
+          body:
+            notificationType === NotificationType.TICKET_ASSIGNED
+              ? `Byl jsi přidán k ticketu "${ticket.title}".`
+              : `Byl jsi odebrán z ticketu "${ticket.title}".`,
+          linkUrl: `/dashboard/tickets/${ticketId}`,
+          metadata: { ticketId },
+        });
       }
 
       return this.findOne(ticketId, user);
@@ -673,7 +745,11 @@ export class TicketsService implements OnModuleInit {
     else if (user.role === Role.TEACHER && ticket.createdById === user.id)
       hasAccess = true;
     else if (user.role === Role.STUDENT) {
-      if (ticket.status === TicketStatus.UNASSIGNED || ticket.assignees.some((a) => a.userId === user.id)) hasAccess = true;
+      if (
+        ticket.status === TicketStatus.UNASSIGNED ||
+        ticket.assignees.some((a) => a.userId === user.id)
+      )
+        hasAccess = true;
     }
 
     if (!hasAccess)
@@ -690,8 +766,8 @@ export class TicketsService implements OnModuleInit {
     const filePath = resolve(process.cwd(), attachment.path);
 
     if (!existsSync(filePath)) {
-        console.error(`File not found at: ${filePath}`);
-        throw new NotFoundException('File on disk not found');
+      console.error(`File not found at: ${filePath}`);
+      throw new NotFoundException('File on disk not found');
     }
 
     const stream = createReadStream(filePath);
@@ -715,72 +791,77 @@ export class TicketsService implements OnModuleInit {
     });
 
     // Notify others? (Optional / Nice to have, not in minimum set but good for collaboration)
-    
+
     return result;
   }
 
   async schedule(id: string, user: User, plannedAt?: string, dueAt?: string) {
     if (user.role !== Role.ADMIN) {
-        throw new ForbiddenException('Only admins can schedule tickets');
+      throw new ForbiddenException('Only admins can schedule tickets');
     }
 
-    const ticket = await this.prisma.ticket.findUnique({ where: { id }, include: { assignees: true } });
+    const ticket = await this.prisma.ticket.findUnique({
+      where: { id },
+      include: { assignees: true },
+    });
     console.log('Schedule User:', user);
     if (!ticket) throw new NotFoundException('Ticket not found');
 
     const updateData: any = {};
     const auditAfter: any = {};
     let notificationType: NotificationType | null = null;
-    
+
     if (plannedAt !== undefined) {
-        updateData.plannedAt = plannedAt ? new Date(plannedAt) : null;
-        auditAfter.plannedAt = updateData.plannedAt;
+      updateData.plannedAt = plannedAt ? new Date(plannedAt) : null;
+      auditAfter.plannedAt = updateData.plannedAt;
     }
     if (dueAt) {
-        const due = new Date(dueAt);
-        if (due.getTime() < new Date(ticket.createdAt).getTime()) {
-           throw new BadRequestException('Due date cannot be earlier than creation date');
-        }
-        updateData.dueAt = due;
-        auditAfter.dueAt = due;
-        
-        // Notify change
-        if (ticket.dueAt && ticket.dueAt.getTime() !== due.getTime()) {
-            notificationType = NotificationType.TICKET_DUE_DATE_CHANGED;
-        }
+      const due = new Date(dueAt);
+      if (due.getTime() < new Date(ticket.createdAt).getTime()) {
+        throw new BadRequestException(
+          'Due date cannot be earlier than creation date',
+        );
+      }
+      updateData.dueAt = due;
+      auditAfter.dueAt = due;
+
+      // Notify change
+      if (ticket.dueAt && ticket.dueAt.getTime() !== due.getTime()) {
+        notificationType = NotificationType.TICKET_DUE_DATE_CHANGED;
+      }
     }
 
     const updated = await this.prisma.ticket.update({
-        where: { id },
-        data: updateData,
-        include: { classroom: true, assignees: { include: { user: true } } }
+      where: { id },
+      data: updateData,
+      include: { classroom: true, assignees: { include: { user: true } } },
     });
 
     // Audit
     await this.auditService.log({
-        actorUserId: user.id,
-        actorRole: user.role,
-        actorName: user.fullName,
-        entityType: AuditEntityType.TICKET,
-        entityId: id,
-        action: AuditAction.TICKET_DUE_DATE_CHANGED, // Or Generic Update
-        message: 'Admin updated schedule/deadline',
-        before: { plannedAt: ticket.plannedAt, dueAt: ticket.dueAt },
-        after: auditAfter
+      actorUserId: user.id,
+      actorRole: user.role,
+      actorName: user.fullName,
+      entityType: AuditEntityType.TICKET,
+      entityId: id,
+      action: AuditAction.TICKET_DUE_DATE_CHANGED, // Or Generic Update
+      message: 'Admin updated schedule/deadline',
+      before: { plannedAt: ticket.plannedAt, dueAt: ticket.dueAt },
+      after: auditAfter,
     });
 
     // Notify
     if (notificationType) {
-        for (const assignee of ticket.assignees) {
-            await this.notificationsService.create({
-                userId: assignee.userId,
-                type: notificationType,
-                title: 'Změna termínu',
-                body: `Termín odevzdání ticketu "${ticket.title}" byl změněn.`,
-                linkUrl: `/tickets/${id}`,
-                metadata: { ticketId: id }
-            });
-        }
+      for (const assignee of ticket.assignees) {
+        await this.notificationsService.create({
+          userId: assignee.userId,
+          type: notificationType,
+          title: 'Změna termínu',
+          body: `Termín odevzdání ticketu "${ticket.title}" byl změněn.`,
+          linkUrl: `/tickets/${id}`,
+          metadata: { ticketId: id },
+        });
+      }
     }
 
     return updated;
@@ -788,7 +869,7 @@ export class TicketsService implements OnModuleInit {
 
   async remove(id: string, user: User) {
     if (user.role !== Role.ADMIN) {
-        throw new ForbiddenException('Only admins can delete tickets');
+      throw new ForbiddenException('Only admins can delete tickets');
     }
 
     const ticket = await this.prisma.ticket.findUnique({ where: { id } });
@@ -796,66 +877,70 @@ export class TicketsService implements OnModuleInit {
 
     // Audit key info before deletion
     await this.auditService.log({
-        actorUserId: user.id,
-        actorRole: user.role,
-        actorName: user.fullName,
-        entityType: AuditEntityType.TICKET,
-        entityId: id,
-        action: AuditAction.TICKET_DELETED,
-        message: `Ticket deleted by admin`,
-        before: { title: ticket.title, status: ticket.status }
+      actorUserId: user.id,
+      actorRole: user.role,
+      actorName: user.fullName,
+      entityType: AuditEntityType.TICKET,
+      entityId: id,
+      action: AuditAction.TICKET_DELETED,
+      message: `Ticket deleted by admin`,
+      before: { title: ticket.title, status: ticket.status },
     });
-    
+
     return this.prisma.ticket.delete({ where: { id } });
   }
 
   async rework(id: string, user: User) {
-    if (user.role !== Role.STUDENT) throw new ForbiddenException('Only students can rework tickets');
+    if (user.role !== Role.STUDENT)
+      throw new ForbiddenException('Only students can rework tickets');
 
     return this.prisma.$transaction(async (tx) => {
-      const ticket = await tx.ticket.findUnique({ where: { id }, include: { assignees: true } });
+      const ticket = await tx.ticket.findUnique({
+        where: { id },
+        include: { assignees: true },
+      });
       if (!ticket) throw new NotFoundException('Ticket not found');
 
       // Strict status check: Only REJECTED tickets can be reworked.
       if (ticket.status !== TicketStatus.REJECTED) {
-         throw new BadRequestException('Ticket must be REJECTED to rework');
+        throw new BadRequestException('Ticket must be REJECTED to rework');
       }
-      
+
       // Archive previous notes to comments
       if (ticket.studentWorkNote || ticket.adminApprovalNote) {
-          const archiveMessage = `[HISTORIE] Ticket vrácen k dopracování.
+        const archiveMessage = `[HISTORIE] Ticket vrácen k dopracování.
 ----------------------------------------
 Řešení studenta: "${ticket.studentWorkNote || 'Neuvedeno'}"
 Vyjádření admina: "${ticket.adminApprovalNote || 'Neuvedeno'}"
 ----------------------------------------`;
-          
-          await tx.ticketComment.create({
-              data: {
-                  ticketId: id,
-                  authorId: user.id, // Or maybe null for system/bot? using user for now as they triggered rework
-                  message: archiveMessage
-              }
-          });
+
+        await tx.ticketComment.create({
+          data: {
+            ticketId: id,
+            authorId: user.id, // Or maybe null for system/bot? using user for now as they triggered rework
+            message: archiveMessage,
+          },
+        });
       }
-      
-      const updateData: any = { 
-          status: TicketStatus.IN_PROGRESS,
-          studentWorkNote: null,
-          adminApprovalNote: null,
-          difficultyPoints: null // Reset potential points if any (though unlikely on reject)
+
+      const updateData: any = {
+        status: TicketStatus.IN_PROGRESS,
+        studentWorkNote: null,
+        adminApprovalNote: null,
+        difficultyPoints: null, // Reset potential points if any (though unlikely on reject)
       };
-      
+
       // Assignee Logic:
       // Remove ALL existing assignees.
       // The user initiating rework becomes the ONLY assignee.
       await tx.ticketAssignee.deleteMany({ where: { ticketId: id } });
 
       await tx.ticketAssignee.create({
-          data: {
-              ticketId: id,
-              userId: user.id,
-              orderIndex: 1
-          }
+        data: {
+          ticketId: id,
+          userId: user.id,
+          orderIndex: 1,
+        },
       });
 
       await tx.ticket.update({ where: { id }, data: updateData });
@@ -867,15 +952,13 @@ Vyjádření admina: "${ticket.adminApprovalNote || 'Neuvedeno'}"
         actorName: user.fullName,
         entityType: AuditEntityType.TICKET,
         entityId: id,
-        action: AuditAction.TICKET_STATUS_CHANGED, 
+        action: AuditAction.TICKET_STATUS_CHANGED,
         message: 'Student started rework',
         before: { status: ticket.status },
-        after: { status: TicketStatus.IN_PROGRESS, assignee: user.fullName }
+        after: { status: TicketStatus.IN_PROGRESS, assignee: user.fullName },
       });
 
       return this.findOne(id, user);
     });
   }
 }
-
-
