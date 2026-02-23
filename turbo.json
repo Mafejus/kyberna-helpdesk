@@ -8,10 +8,11 @@
       "env": ["DATABASE_URL", "NEXT_PUBLIC_API_URL"]
     },
     "railway:build": {
+      "cache": false,
       "outputs": ["dist/**"],
       "env": ["DATABASE_URL"]
     },
-    "db:deploy": {
+    "db:deploy": {  
       "cache": false,
       "env": ["DATABASE_URL"]
     },
