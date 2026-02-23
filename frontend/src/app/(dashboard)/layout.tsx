@@ -32,7 +32,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     // Teacher sees only theirs on dashboard, but maybe a explicit list? keeping it simple per spec.
     // Admin specific
     { href: "/dashboard/admin/users", label: "Uživatelé", icon: Users, roles: ["ADMIN"] },
-    { href: "/dashboard/admin/classrooms", label: "Třídy", icon: GraduationCap, roles: ["ADMIN", "STUDENT"] }, // Enabled for Student
+    { href: "/dashboard/admin/classrooms", label: "Třídy", icon: GraduationCap, roles: ["ADMIN"] },
+    { href: "/dashboard/classrooms", label: "Třídy", icon: GraduationCap, roles: ["STUDENT"] },
     { href: "/dashboard/admin/audit", label: "Audit log", icon: FileText, roles: ["ADMIN"] },
     { href: "/dashboard/admin/attendance", label: "Docházka", icon: ClipboardCheck, roles: ["ADMIN"] },
     { href: "/dashboard/planning", label: "Plánování", icon: Calendar, roles: ["STUDENT", "ADMIN"] },
