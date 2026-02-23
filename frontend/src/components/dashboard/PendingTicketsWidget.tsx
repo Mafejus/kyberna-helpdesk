@@ -33,14 +33,14 @@ export function PendingTicketsWidget() {
   const fetchTickets = () => {
     setLoading(true);
     // Find tickets waiting for approval
-    api.get('/tickets?status=DONE_WAITING_APPROVAL')
+    api.get('/tickets?status=DONE_WAITING_APPROVAL&limit=100')
       .then(res => {
         // Handle paginated response structure
         const data = res.data;
         if (Array.isArray(data)) {
           setTickets(data);
-        } else if (data && Array.isArray(data.items)) {
-          setTickets(data.items);
+        } else if (data && Array.isArray(data.data)) {
+          setTickets(data.data);
         } else {
           setTickets([]);
         }

@@ -7,11 +7,14 @@ import { join } from 'path';
 import type { NestExpressApplication } from '@nestjs/platform-express';
 
 import helmet from 'helmet';
+import * as compression from 'compression';
 
 async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule);
 
-  // Security Headers
+  // Compression (gzip)
+  app.use(compression());
+
   // Security Headers
   app.use(
     helmet({

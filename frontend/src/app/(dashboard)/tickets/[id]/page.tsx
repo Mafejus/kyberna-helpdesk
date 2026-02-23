@@ -61,48 +61,71 @@ export default function TicketDetail() {
     }
   }, [id]);
 
+  const optimisticUpdate = (patch: Partial<any>) => {
+      setTicket((prev: any) => prev ? { ...prev, ...patch } : prev);
+  };
+
   const handleClaim = async () => {
-      try { await api.post(`/tickets/${id}/claim`); toast({ title: "Přebráno" }); fetchTicket(true); } catch(e) { toast({ variant: "destructive", title: "Chyba" }); }
+      const prev = ticket;
+      optimisticUpdate({ status: 'IN_PROGRESS', assignees: [...(ticket.assignees || []), { userId: currentUser?.id, orderIndex: 1, user: { id: currentUser?.id, fullName: currentUser?.fullName } }] });
+      try { await api.post(`/tickets/${id}/claim`); toast({ title: "Přebráno" }); fetchTicket(true); }
+      catch(e) { toast({ variant: "destructive", title: "Chyba" }); setTicket(prev); }
   };
 
   const handleJoin = async () => {
-      try { await api.post(`/tickets/${id}/join`); toast({ title: "přidáno k řešení" }); fetchTicket(true); } catch(e) { toast({ variant: "destructive", title: "Chyba" }); }
+      const prev = ticket;
+      optimisticUpdate({ assignees: [...(ticket.assignees || []), { userId: currentUser?.id, orderIndex: ticket.assignees.length + 1, user: { id: currentUser?.id, fullName: currentUser?.fullName } }] });
+      try { await api.post(`/tickets/${id}/join`); toast({ title: "Přidáno k řešení" }); fetchTicket(true); }
+      catch(e) { toast({ variant: "destructive", title: "Chyba" }); setTicket(prev); }
   };
 
   const handleLeave = async () => {
-      try { await api.post(`/tickets/${id}/leave`); toast({ title: "Opuštěno" }); fetchTicket(true); } catch(e) { toast({ variant: "destructive", title: "Chyba" }); }
+      const prev = ticket;
+      optimisticUpdate({ assignees: ticket.assignees.filter((a: any) => a.userId !== currentUser?.id) });
+      try { await api.post(`/tickets/${id}/leave`); toast({ title: "Opuštěno" }); fetchTicket(true); }
+      catch(e) { toast({ variant: "destructive", title: "Chyba" }); setTicket(prev); }
   };
 
   const handleMarkDone = async () => {
-      try { await api.post(`/tickets/${id}/mark-done`, { note: workNote }); toast({ title: "Hotovo, čeká na schválení" }); fetchTicket(true); } catch(e) { toast({ variant: "destructive", title: "Chyba" }); }
+      const prev = ticket;
+      optimisticUpdate({ status: 'DONE_WAITING_APPROVAL', studentWorkNote: workNote });
+      try { await api.post(`/tickets/${id}/mark-done`, { note: workNote }); toast({ title: "Hotovo, čeká na schválení" }); fetchTicket(true); }
+      catch(e) { toast({ variant: "destructive", title: "Chyba" }); setTicket(prev); }
   };
 
   const handleApprove = async () => {
-      try { await api.post(`/tickets/${id}/approve`, { adminApprovalNote: approvalNote, difficultyPoints: parseInt(points) }); toast({ title: "Schváleno" }); fetchTicket(true); } catch(e) { toast({ variant: "destructive", title: "Chyba" }); }
+      const prev = ticket;
+      optimisticUpdate({ status: 'APPROVED', adminApprovalNote: approvalNote, difficultyPoints: parseInt(points) });
+      try { await api.post(`/tickets/${id}/approve`, { adminApprovalNote: approvalNote, difficultyPoints: parseInt(points) }); toast({ title: "Schváleno" }); fetchTicket(true); }
+      catch(e) { toast({ variant: "destructive", title: "Chyba" }); setTicket(prev); }
   };
 
   const handleReject = async () => {
-      try { 
-          await api.post(`/tickets/${id}/reject`, { 
-              adminApprovalNote: approvalNote,
-              penaltyPoints: parseInt(points) 
-          }); 
-          toast({ title: "Vráceno s penalizací" }); 
-          fetchTicket(true); 
-      } catch(e) { 
-          toast({ variant: "destructive", title: "Chyba" }); 
+      const prev = ticket;
+      optimisticUpdate({ status: 'REJECTED', adminApprovalNote: approvalNote });
+      try {
+          await api.post(`/tickets/${id}/reject`, { adminApprovalNote: approvalNote, penaltyPoints: parseInt(points) });
+          toast({ title: "Vráceno s penalizací" });
+          fetchTicket(true);
+      } catch(e) {
+          toast({ variant: "destructive", title: "Chyba" });
+          setTicket(prev);
       }
   };
 
   const handleRework = async () => {
+      const prev = ticket;
+      optimisticUpdate({ status: 'IN_PROGRESS' });
       try {
           await api.post(`/tickets/${id}/rework`);
           toast({ title: "Vráceno do řešení (Rework)" });
           fetchTicket(true);
       } catch (e) {
           toast({ variant: "destructive", title: "Chyba při reworku" });
+          setTicket(prev);
       }
   };
+
 
   const handleDelete = async () => {
     try {

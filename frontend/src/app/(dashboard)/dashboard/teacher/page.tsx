@@ -13,13 +13,13 @@ export default function TeacherDashboard() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    api.get('/tickets')
+    api.get('/tickets?limit=100')
         .then(res => {
             const data = res.data;
             if (Array.isArray(data)) {
                 setTickets(data);
-            } else if (data && Array.isArray(data.items)) {
-                setTickets(data.items);
+            } else if (data && Array.isArray(data.data)) {
+                setTickets(data.data);
             } else {
                 setTickets([]);
             }

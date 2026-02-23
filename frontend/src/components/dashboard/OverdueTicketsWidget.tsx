@@ -15,16 +15,13 @@ export function OverdueTicketsWidget() {
   const router = useRouter();
 
   useEffect(() => {
-    // We need to fetch all active tickets and filter relevant ones or add a backend filter
-    // For now, let's fetch all (or IN_PROGRESS/UNASSIGNED) and filter client side for 'dueAt < now'
-    // A better backend query would be `?overdue=true`
-    api.get('/tickets').then(res => {
+    api.get('/tickets?limit=100').then(res => {
         const now = Date.now();
-        let allTickets = [];
+        let allTickets: any[] = [];
         if (Array.isArray(res.data)) {
             allTickets = res.data;
-        } else if (res.data && Array.isArray(res.data.items)) {
-            allTickets = res.data.items;
+        } else if (res.data && Array.isArray(res.data.data)) {
+            allTickets = res.data.data;
         }
         
         const overdue = allTickets.filter((t: any) => 
