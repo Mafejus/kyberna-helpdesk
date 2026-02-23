@@ -75,7 +75,8 @@ export default function TicketListPage() {
 
       <TicketList 
           tickets={filtered} 
-          role={user?.role || 'STUDENT'} 
+          role={user?.role || 'STUDENT'}
+          loading={loading}
       />
       
       {nextCursor && (

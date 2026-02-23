@@ -13,13 +13,17 @@ import { useAuth } from "@/context/AuthContext";
 
 export default function ClassroomsPage() {
   const [classrooms, setClassrooms] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
   const [code, setCode] = useState("");
   const { toast } = useToast();
   const { user } = useAuth();
   
   const isAdmin = user?.role === 'ADMIN';
 
-  const fetchClassrooms = () => api.get('/classrooms').then(res => setClassrooms(res.data));
+  const fetchClassrooms = () => {
+    setLoading(true);
+    api.get('/classrooms').then(res => setClassrooms(res.data)).finally(() => setLoading(false));
+  };
   useEffect(() => { fetchClassrooms(); }, []);
 
   const handleCreate = async () => {
@@ -61,34 +65,22 @@ export default function ClassroomsPage() {
       )}
 
       <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-4">
-          {classrooms.map(c => (
+          {loading ? (
+            [...Array(8)].map((_, i) => (
+              <Card key={i} className="animate-pulse">
+                <CardContent className="flex items-center p-4">
+                  <div className="h-7 w-16 rounded bg-muted" />
+                </CardContent>
+              </Card>
+            ))
+          ) : classrooms.length === 0 ? (
+            <p className="text-muted-foreground col-span-full">(Žádné třídy)</p>
+          ) : classrooms.map(c => (
               <Card key={c.id} className="hover:bg-accent/50 transition-colors">
                   <CardContent className="flex items-center justify-between p-4">
-                      {/* For Students, we link to the detail page. Path is specific for admin but page logic is generic? 
-                          Wait, the detail link was `/dashboard/admin/classrooms/${c.id}` in original code.
-                          But detail page is at `src/app/(dashboard)/dashboard/classrooms/[id]/page.tsx`??
-                          No, I checked listing of `.../dashboard/classrooms/[id]`.
-                          But the link in original file was `/dashboard/admin/classrooms/${c.id}`.
-                          This suggests the file generic one I saw earlier `src/app/(dashboard)/dashboard/classrooms/[id]/page.tsx` 
-                          might be ACCESSIBLE via `/dashboard/classrooms/:id` URL. 
-                          The admin link probably went to a DIFFERENT page or the same one if routed?
-                          
-                          I see `(dashboard)/dashboard/admin/classrooms/page.tsx` (this file).
-                          And `(dashboard)/dashboard/classrooms/[id]/page.tsx`.
-                          
-                          If I verify the file structure again:
-                          `src/app/(dashboard)/dashboard/admin/classrooms/page.tsx` -> /dashboard/admin/classrooms
-                          `src/app/(dashboard)/dashboard/classrooms/[id]/page.tsx` -> /dashboard/classrooms/:id (Generic?)
-                          
-                          The link previously was `href={/dashboard/admin/classrooms/${c.id}}`. 
-                          If I point to `/dashboard/classrooms/${c.id}` it should use the generic page.
-                          Let's try pointing to generic page. All roles should use it.
-                      */}
-                      
                       <Link href={`/dashboard/classrooms/${c.id}`} className="flex-1">
                           <span className="text-xl font-bold">{c.code}</span>
                       </Link>
-                      
                       {isAdmin && (
                           <Button variant="ghost" size="icon" onClick={(e) => { e.preventDefault(); handleDelete(c.id); }} className="text-destructive">
                               <Trash className="h-4 w-4" />

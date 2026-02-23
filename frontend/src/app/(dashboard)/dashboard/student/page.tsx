@@ -19,12 +19,15 @@ import Link from "next/link";
 export default function StudentDashboard() {
   const { user } = useAuth();
   const [tickets, setTickets] = useState<any[]>([]);
+  const [ticketsLoading, setTicketsLoading] = useState(true);
   const [activeTab, setActiveTab] = useState("my"); // 'my' | 'available'
   const [stats, setStats] = useState<any>(null);
   const router = useRouter();
 
   useEffect(() => {
     if (user?.role === 'STUDENT') {
+        setTicketsLoading(true);
+        setTickets([]);
         let url = '/tickets';
         if (activeTab === 'my') {
             url += '?filter=assigned';
@@ -37,10 +40,12 @@ export default function StudentDashboard() {
                 setTickets(data);
             } else if (data && Array.isArray(data.items)) {
                 setTickets(data.items);
+            } else if (data && Array.isArray(data.data)) {
+                setTickets(data.data);
             } else {
                 setTickets([]);
             }
-        });
+        }).finally(() => setTicketsLoading(false));
         api.get('/stats/student/me').then(res => setStats(res.data));
     }
   }, [user, activeTab]);
@@ -90,6 +95,7 @@ export default function StudentDashboard() {
                         role="STUDENT" 
                         title="Moje Tickety" 
                         description="Tickety, na kterých pracujete nebo jste je odevzdali."
+                        loading={ticketsLoading}
                     />
                 </TabsContent>
                 <TabsContent value="available" className="mt-4">
@@ -98,6 +104,7 @@ export default function StudentDashboard() {
                         role="STUDENT" 
                         title="Volné Tickety" 
                         description="Tickety, které nikdo neřeší a můžete je převzít."
+                        loading={ticketsLoading}
                     />
                 </TabsContent>
             </Tabs>

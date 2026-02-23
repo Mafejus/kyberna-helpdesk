@@ -12,14 +12,17 @@ import { useAuth } from "@/context/AuthContext";
 
 export default function ClassroomsPage() {
   const [classrooms, setClassrooms] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
   const [code, setCode] = useState("");
   const { toast } = useToast();
   const { user } = useAuth();
 
   const isAdmin = user?.role === "ADMIN";
 
-  const fetchClassrooms = () =>
-    api.get("/classrooms").then((res) => setClassrooms(res.data));
+  const fetchClassrooms = () => {
+    setLoading(true);
+    api.get("/classrooms").then((res) => setClassrooms(res.data)).finally(() => setLoading(false));
+  };
 
   useEffect(() => {
     fetchClassrooms();
@@ -72,7 +75,17 @@ export default function ClassroomsPage() {
       )}
 
       <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-4">
-        {classrooms.map((c) => (
+        {loading ? (
+          [...Array(8)].map((_, i) => (
+            <Card key={i} className="animate-pulse">
+              <CardContent className="flex items-center p-4">
+                <div className="h-7 w-16 rounded bg-muted" />
+              </CardContent>
+            </Card>
+          ))
+        ) : classrooms.length === 0 ? (
+          <p className="text-muted-foreground col-span-full">(Žádné třídy)</p>
+        ) : classrooms.map((c) => (
           <Card key={c.id} className="hover:bg-accent/50 transition-colors">
             <CardContent className="flex items-center justify-between p-4">
               <Link href={`/dashboard/classrooms/${c.id}`} className="flex-1">

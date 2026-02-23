@@ -29,14 +29,15 @@ type TicketListProps = {
   role: 'STUDENT' | 'TEACHER' | 'ADMIN';
   title?: string;
   description?: string;
+  loading?: boolean;
 };
 
 // Priority mapping for sorting
 const PRIORITY_ORDER = { 'CRITICAL': 4, 'HIGH': 3, 'NORMAL': 2, 'LOW': 1 };
 
-import { AlertCircle, CalendarClock, Clock } from "lucide-react"; // Imported AlertCircle
+import { AlertCircle, CalendarClock, Clock, Loader2 } from "lucide-react";
 
-export function TicketList({ tickets, role, title, description }: TicketListProps) {
+export function TicketList({ tickets, role, title, description, loading }: TicketListProps) {
   const router = useRouter();
   const { user } = useAuth();
   const [filter, setFilter] = useState<'ALL' | 'IN_PROGRESS' | 'WAITING' | 'APPROVED' | 'REJECTED' | 'UNASSIGNED'>('ALL');
@@ -181,7 +182,20 @@ export function TicketList({ tickets, role, title, description }: TicketListProp
       )}
       <CardContent className={title ? "" : "p-0"}>
           <div className="relative w-full overflow-auto">
-              {filteredTickets.length === 0 ? (
+              {loading ? (
+                  <div className="space-y-2 p-4">
+                      {[...Array(5)].map((_, i) => (
+                          <div key={i} className="flex gap-4 items-center animate-pulse">
+                              <div className="h-4 w-14 rounded bg-muted" />
+                              <div className="h-4 w-10 rounded bg-muted" />
+                              <div className="h-4 flex-1 rounded bg-muted" />
+                              <div className="h-4 w-20 rounded bg-muted" />
+                              <div className="h-4 w-14 rounded bg-muted" />
+                              <div className="h-4 w-24 rounded bg-muted" />
+                          </div>
+                      ))}
+                  </div>
+              ) : filteredTickets.length === 0 ? (
                   <div className="text-center py-8 text-muted-foreground">Žádné tickety odpovídající filtru.</div>
               ) : (
                   <table className="w-full caption-bottom text-sm text-left">

@@ -37,7 +37,30 @@ export function OverdueTicketsWidget() {
     }).finally(() => setLoading(false));
   }, []);
 
-  if (loading) return <div className="text-sm text-muted-foreground">Načítám...</div>;
+  if (loading) return (
+    <Card className="h-full border-destructive/50 bg-destructive/5">
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2 text-destructive">
+          <AlertTriangle className="h-5 w-5" />
+          Po termínu
+        </CardTitle>
+        <CardDescription>Načítám...</CardDescription>
+      </CardHeader>
+      <CardContent>
+        <div className="space-y-3 animate-pulse">
+          {[...Array(3)].map((_, i) => (
+            <div key={i} className="flex justify-between items-center p-2 rounded border">
+              <div className="flex flex-col gap-1">
+                <div className="h-3 w-32 rounded bg-muted" />
+                <div className="h-3 w-20 rounded bg-destructive/20" />
+              </div>
+              <div className="h-5 w-10 rounded bg-muted" />
+            </div>
+          ))}
+        </div>
+      </CardContent>
+    </Card>
+  );
 
   return (
     <Card className="h-full border-destructive/50 bg-destructive/5">

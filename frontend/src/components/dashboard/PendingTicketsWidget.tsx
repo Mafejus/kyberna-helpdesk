@@ -77,7 +77,37 @@ export function PendingTicketsWidget() {
       }
   };
 
-  if (loading) return <div className="text-sm text-muted-foreground">Načítám...</div>;
+  if (loading) return (
+    <Card className="h-full border-warning/50 bg-warning/5">
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2 text-warning-foreground">
+          <AlertCircle className="h-5 w-5" />
+          Čeká na schválení
+        </CardTitle>
+        <CardDescription>Načítám tickety...</CardDescription>
+      </CardHeader>
+      <CardContent>
+        <div className="space-y-4 animate-pulse">
+          {[...Array(3)].map((_, i) => (
+            <div key={i} className="bg-card border rounded-lg p-4 flex justify-between items-center">
+              <div className="space-y-2 flex-1">
+                <div className="flex gap-2 items-center">
+                  <div className="h-3 w-10 rounded bg-muted" />
+                  <div className="h-3 w-24 rounded bg-muted" />
+                </div>
+                <div className="h-4 w-2/3 rounded bg-muted" />
+                <div className="h-3 w-1/2 rounded bg-muted" />
+              </div>
+              <div className="flex gap-2 ml-4">
+                <div className="h-8 w-20 rounded bg-muted" />
+                <div className="h-8 w-16 rounded bg-muted" />
+              </div>
+            </div>
+          ))}
+        </div>
+      </CardContent>
+    </Card>
+  );
 
   return (
     <Card className="h-full border-warning/50 bg-warning/5">
