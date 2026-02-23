@@ -7,6 +7,10 @@
       "outputs": ["dist/**", ".next/**"],
       "env": ["DATABASE_URL", "NEXT_PUBLIC_API_URL"]
     },
+    "railway:build": {
+      "outputs": ["dist/**"],
+      "env": ["DATABASE_URL"]
+    },
     "db:deploy": {
       "cache": false,
       "env": ["DATABASE_URL"]
