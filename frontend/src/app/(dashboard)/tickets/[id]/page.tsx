@@ -42,9 +42,11 @@ export default function TicketDetail() {
   const [selectedStudentToAdd, setSelectedStudentToAdd] = useState("");
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
 
-  const fetchTicket = () => {
-      setLoading(true);
-      api.get(`/tickets/${id}`).then(res => setTicket(res.data)).finally(() => setLoading(false));
+  const fetchTicket = (silent = false) => {
+      if (!silent) setLoading(true);
+      api.get(`/tickets/${id}`).then(res => setTicket(res.data)).finally(() => {
+          if (!silent) setLoading(false);
+      });
   };
 
   useEffect(() => {
@@ -60,34 +62,33 @@ export default function TicketDetail() {
   }, [id]);
 
   const handleClaim = async () => {
-      try { await api.post(`/tickets/${id}/claim`); toast({ title: "Přebráno" }); fetchTicket(); } catch(e) { toast({ variant: "destructive", title: "Chyba" }); }
+      try { await api.post(`/tickets/${id}/claim`); toast({ title: "Přebráno" }); fetchTicket(true); } catch(e) { toast({ variant: "destructive", title: "Chyba" }); }
   };
 
   const handleJoin = async () => {
-      try { await api.post(`/tickets/${id}/join`); toast({ title: "přidáno k řešení" }); fetchTicket(); } catch(e) { toast({ variant: "destructive", title: "Chyba" }); }
+      try { await api.post(`/tickets/${id}/join`); toast({ title: "přidáno k řešení" }); fetchTicket(true); } catch(e) { toast({ variant: "destructive", title: "Chyba" }); }
   };
 
   const handleLeave = async () => {
-      try { await api.post(`/tickets/${id}/leave`); toast({ title: "Opuštěno" }); fetchTicket(); } catch(e) { toast({ variant: "destructive", title: "Chyba" }); }
+      try { await api.post(`/tickets/${id}/leave`); toast({ title: "Opuštěno" }); fetchTicket(true); } catch(e) { toast({ variant: "destructive", title: "Chyba" }); }
   };
 
   const handleMarkDone = async () => {
-      try { await api.post(`/tickets/${id}/mark-done`, { note: workNote }); toast({ title: "Hotovo, čeká na schválení" }); fetchTicket(); } catch(e) { toast({ variant: "destructive", title: "Chyba" }); }
+      try { await api.post(`/tickets/${id}/mark-done`, { note: workNote }); toast({ title: "Hotovo, čeká na schválení" }); fetchTicket(true); } catch(e) { toast({ variant: "destructive", title: "Chyba" }); }
   };
 
   const handleApprove = async () => {
-      try { await api.post(`/tickets/${id}/approve`, { adminApprovalNote: approvalNote, difficultyPoints: parseInt(points) }); toast({ title: "Schváleno" }); fetchTicket(); } catch(e) { toast({ variant: "destructive", title: "Chyba" }); }
+      try { await api.post(`/tickets/${id}/approve`, { adminApprovalNote: approvalNote, difficultyPoints: parseInt(points) }); toast({ title: "Schváleno" }); fetchTicket(true); } catch(e) { toast({ variant: "destructive", title: "Chyba" }); }
   };
 
   const handleReject = async () => {
-      // Send selected points as penaltyPoints
       try { 
           await api.post(`/tickets/${id}/reject`, { 
               adminApprovalNote: approvalNote,
               penaltyPoints: parseInt(points) 
           }); 
           toast({ title: "Vráceno s penalizací" }); 
-          fetchTicket(); 
+          fetchTicket(true); 
       } catch(e) { 
           toast({ variant: "destructive", title: "Chyba" }); 
       }
@@ -97,7 +98,7 @@ export default function TicketDetail() {
       try {
           await api.post(`/tickets/${id}/rework`);
           toast({ title: "Vráceno do řešení (Rework)" });
-          fetchTicket();
+          fetchTicket(true);
       } catch (e) {
           toast({ variant: "destructive", title: "Chyba při reworku" });
       }
@@ -115,14 +116,14 @@ export default function TicketDetail() {
 
   const handleAddComment = async () => {
       if (!comment.trim()) return;
-      try { await api.post(`/tickets/${id}/comments`, { message: comment }); setComment(""); fetchTicket(); } catch(e) { toast({ variant: "destructive", title: "Chyba" }); }
+      try { await api.post(`/tickets/${id}/comments`, { message: comment }); setComment(""); fetchTicket(true); } catch(e) { toast({ variant: "destructive", title: "Chyba" }); }
   };
 
   const handleManageAssignee = async (action: 'ADD' | 'REMOVE' | 'SET_FIRST', userId: string) => {
       try {
            await api.post(`/tickets/${id}/assignees`, { action, userId });
            toast({ title: "Aktualizováno" });
-           fetchTicket();
+           fetchTicket(true);
       } catch(e) { toast({ variant: "destructive", title: "Chyba" }); }
   };
 
@@ -182,7 +183,7 @@ export default function TicketDetail() {
               {/* ADMIN PRIORITY SELECTOR */}
               {currentUser?.role === 'ADMIN' && (
                   <Select value={ticket.priority} onValueChange={(val) => {
-                      api.patch(`/tickets/${id}/priority`, { priority: val }).then(() => { toast({ title: "Priorita změnena" }); fetchTicket(); });
+                      api.patch(`/tickets/${id}/priority`, { priority: val }).then(() => { toast({ title: "Priorita změnena" }); fetchTicket(true); });
                   }}>
                       <SelectTrigger className="w-[120px]">
                           <SelectValue placeholder="Priorita" />
@@ -418,7 +419,7 @@ export default function TicketDetail() {
                       {currentUser?.role === 'STUDENT' && isAssignee && ticket.status === 'IN_PROGRESS' && (
                           <div className="space-y-2 pt-2">
                               <Dialog>
-                                <DialogTrigger asChild><Button className="w-full bg-success hover:bg-success/90">Označit jako hotové</Button></DialogTrigger>
+                                <DialogTrigger asChild><Button variant="success" className="w-full">Označit jako hotové</Button></DialogTrigger>
                                 <DialogContent>
                                     <DialogHeader><DialogTitle>Hotovo?</DialogTitle></DialogHeader>
                                     <div className="space-y-4 py-4">
@@ -455,8 +456,8 @@ export default function TicketDetail() {
                               <Textarea value={approvalNote} onChange={e => setApprovalNote(e.target.value)} placeholder="Hodnocení..." className="h-20" />
                           </div>
                           <div className="flex gap-2">
-                              <Button className="flex-1 bg-success hover:bg-success/90" onClick={handleApprove}>Schválit</Button>
-                              <Button className="flex-1 bg-destructive hover:bg-destructive/90" onClick={handleReject}>Vrátit</Button>
+                              <Button variant="success" className="flex-1" onClick={handleApprove}>Schválit</Button>
+                              <Button variant="destructive" className="flex-1" onClick={handleReject}>Vrátit</Button>
                           </div>
                       </CardContent>
                   </Card>
