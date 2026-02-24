@@ -56,7 +56,10 @@ export function ProjectorsTable({ projectors, isAdmin, onEdit, onDelete }: Proje
             <TableHead className="text-center">Funkčnost</TableHead>
             <TableHead className="text-center">Dell Dock</TableHead>
             <TableHead className="text-center">HDMI</TableHead>
+            <TableHead className="text-center">HDMI prodl.</TableHead>
+            <TableHead>USB prodl.</TableHead>
             <TableHead>Poslední kontrola</TableHead>
+            <TableHead>Poznámky</TableHead>
             {isAdmin && <TableHead className="text-right">Akce</TableHead>}
           </TableRow>
         </TableHeader>
@@ -86,7 +89,14 @@ export function ProjectorsTable({ projectors, isAdmin, onEdit, onDelete }: Proje
                   <BoolIcon value={p.hasHdmi} />
                 </div>
               </TableCell>
+              <TableCell className="text-center">
+                <div className="flex justify-center">
+                  <BoolIcon value={p.hasHdmiExtension} />
+                </div>
+              </TableCell>
+              <TableCell>{p.usbExtensionType || "—"}</TableCell>
               <TableCell>{formatDate(p.lastInspectionDate)}</TableCell>
+              <TableCell className="max-w-[200px] truncate text-sm text-muted-foreground" title={p.notes || ""}>{p.notes || "—"}</TableCell>
               {isAdmin && (
                 <TableCell className="text-right">
                   <div className="flex justify-end gap-1">
