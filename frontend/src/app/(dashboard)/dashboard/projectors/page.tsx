@@ -60,13 +60,13 @@ export default function ProjectorsPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight">Projektory a Vybavení</h1>
+          <h1 className="text-xl sm:text-2xl font-bold tracking-tight">Projektory a Vybavení</h1>
           <p className="text-muted-foreground">Evidence školních projektorů a kateder</p>
         </div>
         {isAdmin && (
-          <Button onClick={() => setDialogOpen(true)}>
+          <Button onClick={() => setDialogOpen(true)} className="w-full sm:w-auto">
             <Plus className="mr-2 h-4 w-4" /> Přidat projektor
           </Button>
         )}

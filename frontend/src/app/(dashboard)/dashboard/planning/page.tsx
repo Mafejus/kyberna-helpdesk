@@ -137,7 +137,7 @@ export default function PlanningPage() {
   return (
     <div className="space-y-8 pb-10">
       <div>
-        <h1 className="text-3xl font-bold tracking-tight text-gray-900">Plánování Helpdesku</h1>
+        <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">Plánování Helpdesku</h1>
         <p className="text-muted-foreground mt-2">
           Přehled služeb nápovědy. {user?.role === 'STUDENT' ? "Klikni na slot pro přihlášení." : "Správa služeb."}
         </p>

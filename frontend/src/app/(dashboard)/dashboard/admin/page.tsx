@@ -20,12 +20,12 @@ export default function AdminDashboard() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <h1 className="text-3xl font-bold tracking-tight text-primary">Admin Dashboard</h1>
-        <div className="flex gap-2">
-            <Link href="/tickets/create"><Button>Nový ticket</Button></Link>
-            <Link href="/dashboard/admin/users"><Button variant="outline"><Users className="mr-2 h-4 w-4"/> Správa uživatelů</Button></Link>
-            <Link href="/dashboard/admin/classrooms"><Button variant="outline"><BookOpen className="mr-2 h-4 w-4"/> Třídy</Button></Link>
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-primary">Admin Dashboard</h1>
+        <div className="flex flex-wrap gap-2">
+            <Link href="/tickets/create"><Button size="sm">Nový ticket</Button></Link>
+            <Link href="/dashboard/admin/users"><Button variant="outline" size="sm"><Users className="mr-2 h-4 w-4"/> Uživatelé</Button></Link>
+            <Link href="/dashboard/admin/classrooms"><Button variant="outline" size="sm"><BookOpen className="mr-2 h-4 w-4"/> Třídy</Button></Link>
         </div>
       </div>
       
@@ -49,14 +49,14 @@ export default function AdminDashboard() {
         </Card>
       </div>
 
-      <div className="grid gap-6 md:grid-cols-3 lg:grid-cols-7 h-[700px]">
+      <div className="grid gap-6 md:grid-cols-3 lg:grid-cols-7">
         {/* Main Content - Pending Tickets */}
-        <div className="md:col-span-2 lg:col-span-5 h-full">
+        <div className="md:col-span-2 lg:col-span-5">
             <PendingTicketsWidget />
         </div>
 
         {/* Sidebar - Leaderboard & Overdue */}
-        <div className="md:col-span-1 lg:col-span-2 h-full flex flex-col gap-6">
+        <div className="md:col-span-1 lg:col-span-2 flex flex-col gap-6">
             <div className="h-1/2">
                 <OverdueTicketsWidget />
             </div>

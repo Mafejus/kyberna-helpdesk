@@ -87,7 +87,7 @@ export function AttendanceCalendar() {
                                    {slot?.assignees.length === 0 && <span className="text-muted-foreground/30">-</span>}
                                    <div className="flex flex-wrap gap-1">
                                        {slot?.assignees.map((a, idx) => (
-                                           <div key={idx} className="flex items-center gap-1 bg-white dark:bg-zinc-800 border px-1 rounded shadow-sm w-full truncate" title={`${a.user.fullName} - ${a.status}`}>
+                                            <div key={idx} className="flex items-center gap-1 bg-card text-card-foreground border px-1.5 py-0.5 rounded shadow-sm w-full truncate" title={`${a.user.fullName} - ${a.status}`}>
                                                <StatusIcon status={a.status} />
                                                <span className="truncate max-w-[80px]">{a.user.fullName.split(' ')[0]}</span>
                                            </div>

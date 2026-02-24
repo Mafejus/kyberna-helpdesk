@@ -59,9 +59,9 @@ export default function TicketListPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <h1 className="text-3xl font-bold tracking-tight">Tickety</h1>
-        <Link href="/tickets/create"><Button>Nahlásit ticket</Button></Link>
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">Tickety</h1>
+        <Link href="/tickets/create"><Button className="w-full sm:w-auto">Nahlásit ticket</Button></Link>
       </div>
 
       <div className="flex gap-4">
@@ -69,7 +69,7 @@ export default function TicketListPage() {
              placeholder="Hledat v načtených (název, učebna)..." 
              value={search} 
              onChange={e => setSearch(e.target.value)} 
-             className="max-w-xs"
+             className="w-full sm:max-w-xs"
           />
       </div>
 

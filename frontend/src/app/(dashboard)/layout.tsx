@@ -5,7 +5,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
-import { LayoutDashboard, Ticket, Users, GraduationCap, LogOut, Menu, UserCircle, Calendar, FileText, Settings, ClipboardCheck, Projector } from "lucide-react";
+import { LayoutDashboard, Ticket, Users, GraduationCap, LogOut, Menu, X, UserCircle, Calendar, FileText, Settings, ClipboardCheck, Projector } from "lucide-react";
 import { useState } from "react";
 import { ModeToggle } from "@/components/mode-toggle";
 import { NotificationBell } from "@/components/notifications/NotificationBell";
@@ -43,9 +43,9 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
   const filteredLinks = links.filter(l => l.roles.includes(user.role));
 
-  const NavContent = () => (
+  const NavContent = ({ onLinkClick }: { onLinkClick?: () => void }) => (
       <nav className="space-y-2 p-4">
-          <div className="mb-0 flex items-center justify-between px-2 py-4">
+          <div className="mb-0 hidden md:flex items-center justify-between px-2 py-4">
             <h1 className="text-xl font-bold tracking-tight">Helpdesk</h1>
             <div className="flex items-center gap-1">
               <NotificationBell />
@@ -54,7 +54,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           </div>
           <div className="space-y-1">
             {filteredLinks.map((link) => (
-                <Link key={link.href} href={link.href}>
+                <Link key={link.href} href={link.href} onClick={onLinkClick}>
                     <span className={cn(
                         "flex items-center rounded-md px-3 py-2 text-sm font-medium hover:bg-accent hover:text-accent-foreground",
                         pathname === link.href ? "bg-accent/50 text-accent-foreground" : "text-muted-foreground"
@@ -92,29 +92,43 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       <ChangePasswordDialog open={changePasswordOpen} onOpenChange={setChangePasswordOpen} />
 
       {/* Mobile Header */}
-      <div className="flex h-14 items-center border-b px-4 md:hidden">
-         <Button variant="ghost" size="icon" onClick={() => setMobileMenuOpen(!mobileMenuOpen)}>
-             <Menu className="h-5 w-5" />
-         </Button>
-         <span className="ml-2 font-bold">Helpdesk</span>
+      <div className="flex h-14 items-center justify-between border-b px-4 md:hidden">
+         <div className="flex items-center">
+           <Button variant="ghost" size="icon" onClick={() => setMobileMenuOpen(!mobileMenuOpen)}>
+               <Menu className="h-5 w-5" />
+           </Button>
+           <span className="ml-2 font-bold">Helpdesk</span>
+         </div>
+         <div className="flex items-center gap-1">
+           <NotificationBell />
+           <ModeToggle />
+         </div>
       </div>
 
       {/* Mobile Menu Overlay */}
       {mobileMenuOpen && (
-          <div className="fixed inset-0 z-50 bg-background md:hidden">
+          <div className="fixed inset-0 z-50 bg-background md:hidden overflow-y-auto">
                <div className="flex justify-between border-b p-4 items-center">
-                   <div className="flex items-center gap-2">
-                       <span className="font-bold">Menu</span>
-                       <NotificationBell />
-                       <ModeToggle />
-                   </div>
+                   <span className="font-bold text-lg">Menu</span>
                    <Button variant="ghost" size="icon" onClick={() => setMobileMenuOpen(false)}>
-                       <Menu className="h-5 w-5" /> {/* Close icon ideally */}
+                       <X className="h-5 w-5" />
                    </Button>
                </div>
-               <NavContent />
-               <div className="p-4">
-                   <Button variant="outline" className="w-full" onClick={logout}>Odhlásit</Button>
+               <NavContent onLinkClick={() => setMobileMenuOpen(false)} />
+               <div className="border-t mx-4 pt-4 mt-2 space-y-3">
+                   <div className="flex items-center gap-2 px-2">
+                       <UserCircle className="h-5 w-5 opacity-70" />
+                       <div className="text-xs">
+                           <p className="font-medium">{user.fullName}</p>
+                           <p className="text-muted-foreground">{user.email}</p>
+                       </div>
+                   </div>
+                   <Button variant="outline" className="w-full justify-start" onClick={() => { setMobileMenuOpen(false); setChangePasswordOpen(true); }}>
+                       <KeyRound className="mr-2 h-4 w-4" /> Změnit heslo
+                   </Button>
+                   <Button variant="ghost" className="w-full justify-start text-muted-foreground" onClick={logout}>
+                       <LogOut className="mr-2 h-4 w-4" /> Odhlásit
+                   </Button>
                </div>
           </div>
       )}

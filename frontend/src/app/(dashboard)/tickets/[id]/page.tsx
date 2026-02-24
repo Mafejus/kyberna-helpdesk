@@ -190,7 +190,7 @@ export default function TicketDetail() {
 
       <div className="flex flex-col md:flex-row gap-4 justify-between items-start">
           <div className="space-y-1">
-              <h1 className="text-3xl font-bold">{ticket.title}</h1>
+              <h1 className="text-2xl sm:text-3xl font-bold">{ticket.title}</h1>
               <div className="flex items-center gap-2 text-muted-foreground flex-wrap">
                   <Badge variant="outline">{ticket.classroom.code}</Badge>
                   <span>•</span>
@@ -199,7 +199,7 @@ export default function TicketDetail() {
                   <span>{new Date(ticket.createdAt).toLocaleString()}</span>
               </div>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 flex-wrap">
               {(ticket.priority === 'HIGH' || ticket.priority === 'CRITICAL') && <Badge variant="destructive">Vysoká priorita</Badge>}
               <StatusBadge status={ticket.status} className="text-lg py-1 px-3" />
               

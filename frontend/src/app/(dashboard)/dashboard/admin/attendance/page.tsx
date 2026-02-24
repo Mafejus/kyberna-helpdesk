@@ -130,7 +130,7 @@ export default function AdminAttendancePage() {
 
         <div className="flex flex-col gap-4 md:flex-row md:items-end justify-between bg-card p-4 rounded-lg border shadow-sm">
              <div className="flex flex-col gap-2 md:flex-row md:items-end">
-                 <div className="w-[180px]">
+                 <div className="w-full sm:w-[180px]">
                      <label className="text-xs font-medium mb-1 block">Rychlý filtr</label>
                      <Select value={rangePreset} onValueChange={handlePresetChange}>
                          <SelectTrigger><SelectValue /></SelectTrigger>
@@ -149,7 +149,7 @@ export default function AdminAttendancePage() {
                         type="date" 
                         value={dateRange.from} 
                         onChange={(e) => { setDateRange(prev => ({ ...prev, from: e.target.value })); setRangePreset('custom'); }} 
-                        className="w-[150px]"
+                        className="w-full sm:w-[150px]"
                      />
                  </div>
                  <div>
@@ -158,7 +158,7 @@ export default function AdminAttendancePage() {
                         type="date" 
                         value={dateRange.to} 
                         onChange={(e) => { setDateRange(prev => ({ ...prev, to: e.target.value })); setRangePreset('custom'); }} 
-                        className="w-[150px]"
+                        className="w-full sm:w-[150px]"
                      />
                  </div>
              </div>

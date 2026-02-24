@@ -98,7 +98,7 @@ export default function UsersPage() {
           <CardHeader>
               <CardTitle>Nový uživatel</CardTitle>
           </CardHeader>
-          <CardContent className="grid gap-4 md:grid-cols-5 items-end">
+          <CardContent className="grid gap-4 grid-cols-1 sm:grid-cols-2 md:grid-cols-5 items-end">
                <div className="grid gap-2">
                    <Label>Jméno</Label>
                    <Input value={newUser.fullName} onChange={e => setNewUser({...newUser, fullName: e.target.value})} placeholder="Jan Novák" />

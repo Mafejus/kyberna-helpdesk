@@ -131,12 +131,12 @@ export default function NotificationSettingsPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-center">
+      <div className="flex flex-col gap-3 sm:flex-row sm:justify-between sm:items-center">
         <div>
-            <h2 className="text-3xl font-bold tracking-tight">Nastavení notifikací</h2>
+            <h2 className="text-2xl sm:text-3xl font-bold tracking-tight">Nastavení notifikací</h2>
             <p className="text-muted-foreground">Vyberte, které upozornění chcete dostávat.</p>
         </div>
-        <Button onClick={handleSave} disabled={saving}>
+        <Button onClick={handleSave} disabled={saving} className="w-full sm:w-auto">
           {saving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
           Uložit změny
         </Button>

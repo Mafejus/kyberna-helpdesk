@@ -46,31 +46,31 @@ export function WeeklyCalendar({ startDate, weekData, loading, onNavigate, onSlo
   return (
     <div className="space-y-4">
       {/* Navigation */}
-      <div className="flex items-center justify-between mb-4">
+      <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between mb-4">
         <div className="flex items-center gap-2">
-           <h2 className="text-xl font-bold text-gray-800 flex items-center gap-2">
+           <h2 className="text-lg sm:text-xl font-bold text-foreground flex items-center gap-2">
              <CalendarIcon className="w-5 h-5 text-indigo-600" />
              Týden {startDate.toLocaleDateString('cs-CZ', { day: 'numeric', month: 'long' })}
            </h2>
         </div>
         <div className="flex items-center gap-2">
           <Button variant="outline" size="sm" onClick={() => onNavigate('prev')}>
-            <ChevronLeft className="w-4 h-4" /> Předchozí
+            <ChevronLeft className="w-4 h-4" /><span className="hidden sm:inline"> Předchozí</span>
           </Button>
           <Button variant="outline" size="sm" onClick={() => onNavigate('today')}>
-             Tento týden
+             Dnes
           </Button>
           <Button variant="outline" size="sm" onClick={() => onNavigate('next')}>
-            Další <ChevronRight className="w-4 h-4" />
+            <span className="hidden sm:inline">Další </span><ChevronRight className="w-4 h-4" />
           </Button>
         </div>
       </div>
 
       {/* Grid */}
-      <div className="border rounded-md shadow-sm overflow-hidden bg-white">
-        <Table>
+      <div className="border rounded-md shadow-sm overflow-x-auto bg-card">
+        <Table className="min-w-[700px]">
           <TableHeader>
-            <TableRow className="bg-gray-50/50">
+            <TableRow className="bg-muted/30">
               <TableHead className="w-[100px] text-center font-bold">Hodina</TableHead>
               {weekDays.map(day => (
                 <TableHead key={day.toISOString()} className="text-center min-w-[140px]">
@@ -86,10 +86,10 @@ export function WeeklyCalendar({ startDate, weekData, loading, onNavigate, onSlo
               const lesson = parseInt(lessonStr);
               return (
                 <TableRow key={lesson}>
-                  <TableCell className="text-center bg-gray-50/30 border-r p-2">
+                  <TableCell className="text-center bg-muted/20 border-r p-2">
                     <div className="flex flex-col items-center justify-center">
-                      <span className="font-bold text-lg text-gray-700">{lesson}</span>
-                      <span className="text-xs text-gray-500">{time.start}<br/>{time.end}</span>
+                      <span className="font-bold text-lg text-foreground">{lesson}</span>
+                      <span className="text-xs text-muted-foreground">{time.start}<br/>{time.end}</span>
                     </div>
                   </TableCell>
                   {weekDays.map(day => {
@@ -102,11 +102,11 @@ export function WeeklyCalendar({ startDate, weekData, loading, onNavigate, onSlo
                      return (
                        <TableCell 
                           key={day.toISOString()} 
-                          className={`p-1 cursor-pointer transition-colors hover:bg-gray-50 ${isFull ? 'bg-red-50/30' : ''}`}
+                          className={`p-1 cursor-pointer transition-colors hover:bg-muted/50 ${isFull ? 'bg-red-50/30' : ''}`}
                           onClick={() => onSlotClick(day.toISOString().split('T')[0], lesson, shift)}
                        >
                          <div className={`h-full min-h-[60px] w-full rounded border p-2 flex flex-col gap-1 items-center justify-center text-center relative
-                           ${count === 0 ? 'border-dashed border-gray-200 text-gray-400' : ''}
+                           ${count === 0 ? 'border-dashed border-muted text-muted-foreground' : ''}
                            ${count > 0 && count < 10 ? 'border-indigo-200 bg-indigo-50/50' : ''}
                            ${count >= 10 ? 'border-red-200 bg-red-50/50' : ''}
                            ${hasSwap ? 'border-orange-400 bg-orange-50/80 ring-1 ring-orange-300' : ''}

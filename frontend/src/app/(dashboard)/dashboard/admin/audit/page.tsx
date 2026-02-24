@@ -59,7 +59,7 @@ export default function AdminAuditPage() {
              <Filter className="h-4 w-4"/> Filtry
           </CardTitle>
         </CardHeader>
-        <CardContent className="grid gap-4 md:grid-cols-4 items-end">
+        <CardContent className="grid gap-4 grid-cols-1 sm:grid-cols-2 md:grid-cols-4 items-end">
           <div className="space-y-2">
              <span className="text-sm font-medium">Typ entity</span>
              <Select value={entityType} onValueChange={setEntityType}>
@@ -90,8 +90,8 @@ export default function AdminAuditPage() {
         </CardContent>
       </Card>
 
-      <div className="border rounded-md bg-white overflow-hidden">
-        <Table>
+      <div className="border rounded-md bg-card overflow-x-auto">
+        <Table className="min-w-[600px]">
           <TableHeader>
             <TableRow>
               <TableHead>Čas</TableHead>

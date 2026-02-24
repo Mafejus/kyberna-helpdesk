@@ -198,15 +198,15 @@ export function TicketList({ tickets, role, title, description, loading }: Ticke
               ) : filteredTickets.length === 0 ? (
                   <div className="text-center py-8 text-muted-foreground">Žádné tickety odpovídající filtru.</div>
               ) : (
-                  <table className="w-full caption-bottom text-sm text-left">
+                  <table className="w-full caption-bottom text-sm text-left min-w-[500px]">
                       <thead className="[&_tr]:border-b">
                           <tr className="border-b transition-colors hover:bg-muted/50 data-[state=selected]:bg-muted">
                               <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground">Termín</th>
                               <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground">Třída</th>
                               <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground">Název</th>
                               <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground">Stav</th>
-                              <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground">Priorita</th>
-                              <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground">Řešitel</th>
+                              <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground hidden sm:table-cell">Priorita</th>
+                              <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground hidden sm:table-cell">Řešitel</th>
                           </tr>
                       </thead>
                       <tbody className="[&_tr:last-child]:border-0">
@@ -257,12 +257,12 @@ export function TicketList({ tickets, role, title, description, loading }: Ticke
                                           {getStatusLabel(t.status)}
                                       </Badge>
                                   </td>
-                                  <td className="p-4 align-middle">
+                                  <td className="p-4 align-middle hidden sm:table-cell">
                                       {(t.priority === 'HIGH' || t.priority === 'CRITICAL') && <Badge className="bg-destructive hover:bg-destructive/90 text-destructive-foreground border-destructive">Vysoká</Badge>}
                                       {t.priority === 'NORMAL' && <Badge variant="secondary" className="bg-blue-100 text-blue-800 hover:bg-blue-200 border-blue-200">Normální</Badge>}
                                       {t.priority === 'LOW' && <Badge variant="outline" className="text-muted-foreground border-muted-foreground/30">Nízká</Badge>}
                                   </td>
-                                  <td className="p-4 align-middle">
+                                  <td className="p-4 align-middle hidden sm:table-cell">
                                       {t.assignees?.[0]?.user?.fullName || '-'}
                                       {t.assignees?.length > 1 && ` (+${t.assignees.length - 1})`}
                                   </td>
