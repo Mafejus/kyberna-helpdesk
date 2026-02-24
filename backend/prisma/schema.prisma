@@ -385,3 +385,21 @@ model PcPropertyValue {
 
   @@unique([pcId, propertyId])
 }
+
+// 6) PROJECTORS & EQUIPMENT
+model Projector {
+  id                 String    @id @default(uuid())
+  classroom          String
+  hasDellDock        Boolean   @default(false)
+  isFunctional       Boolean   @default(true)
+  hasHdmi            Boolean   @default(false)
+  hasHdmiExtension   Boolean   @default(false)
+  usbExtensionType   String?
+  brand              String
+  model              String
+  lampHours          String?
+  lastInspectionDate DateTime?
+  notes              String?
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
+}

@@ -5,7 +5,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
-import { LayoutDashboard, Ticket, Users, GraduationCap, LogOut, Menu, UserCircle, Calendar, FileText, Settings, ClipboardCheck } from "lucide-react";
+import { LayoutDashboard, Ticket, Users, GraduationCap, LogOut, Menu, UserCircle, Calendar, FileText, Settings, ClipboardCheck, Projector } from "lucide-react";
 import { useState } from "react";
 import { ModeToggle } from "@/components/mode-toggle";
 import { NotificationBell } from "@/components/notifications/NotificationBell";
@@ -36,6 +36,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     { href: "/dashboard/classrooms", label: "Třídy", icon: GraduationCap, roles: ["STUDENT"] },
     { href: "/dashboard/admin/audit", label: "Audit log", icon: FileText, roles: ["ADMIN"] },
     { href: "/dashboard/admin/attendance", label: "Docházka", icon: ClipboardCheck, roles: ["ADMIN"] },
+    { href: "/dashboard/projectors", label: "Projektory", icon: Projector, roles: ["STUDENT", "ADMIN"] },
     { href: "/dashboard/planning", label: "Plánování", icon: Calendar, roles: ["STUDENT", "ADMIN"] },
     { href: "/dashboard/settings/notifications", label: "Notifikace", icon: Settings, roles: ["STUDENT", "TEACHER", "ADMIN"] },
   ];

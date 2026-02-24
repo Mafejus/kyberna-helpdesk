@@ -17,6 +17,7 @@ import { APP_GUARD } from '@nestjs/core';
 
 import { AppController } from './app.controller';
 import { AttendanceModule } from './attendance/attendance.module';
+import { ProjectorsModule } from './projectors/projectors.module';
 
 @Module({
   imports: [
@@ -40,6 +41,7 @@ import { AttendanceModule } from './attendance/attendance.module';
     NotificationPreferencesModule,
     ClassroomPcModule,
     AttendanceModule,
+    ProjectorsModule,
   ],
   providers: [
     {
