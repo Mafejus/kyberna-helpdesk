@@ -165,7 +165,11 @@ export class AttendanceService {
       let workedMs = 0;
 
       if (checkInEnd) {
-        workedMs = checkInEnd.getTime() - checkInStart.getTime();
+        // Cap checkout time to shift end – if student checks out late,
+        // only count worked minutes up to the scheduled end of the shift.
+        const effectiveEnd =
+          checkInEnd.getTime() > shiftEnd.getTime() ? shiftEnd : checkInEnd;
+        workedMs = effectiveEnd.getTime() - checkInStart.getTime();
       } else {
         // Still running or missing checkout
         if (now > shiftEnd) {
