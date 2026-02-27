@@ -1,4 +1,4 @@
-import { Controller, Get, Patch, Param, Body, UseGuards, Res, Post, UseInterceptors, UploadedFile, Request, BadRequestException } from '@nestjs/common';
+import { Controller, Get, Patch, Param, Body, UseGuards, Res, Post, UseInterceptors, UploadedFile, Request, BadRequestException, Delete } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { WorkOrdersService } from './work-orders.service';
 import { UpdateWorkOrderDto } from './dto/update-work-order.dto';
@@ -50,5 +50,11 @@ export class WorkOrdersController {
   @Roles(Role.STUDENT, Role.ADMIN)
   update(@Param('id') id: string, @Body() dto: UpdateWorkOrderDto) {
     return this.workOrdersService.update(id, dto);
+  }
+
+  @Delete()
+  @Roles(Role.ADMIN)
+  deleteAll() {
+    return this.workOrdersService.deleteAll();
   }
 }

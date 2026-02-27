@@ -5,7 +5,7 @@ import api from "@/lib/api";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/components/ui/use-toast";
-import { FileDown, Edit, UploadCloud } from "lucide-react";
+import { FileDown, Edit, UploadCloud, Trash } from "lucide-react";
 import { useRef } from "react";
 import {
   Dialog,
@@ -64,6 +64,17 @@ export default function WorkOrdersPage() {
     }
   };
 
+  const handleDeleteAll = async () => {
+    if (!confirm("Opravdu chcete smazat VŠECHNY výkazy práce? Tato akce je nevratná.")) return;
+    try {
+      await api.delete("/work-orders");
+      toast({ title: "Smazáno", description: "Všechny výkazy byly odstraněny." });
+      fetchWorkOrders();
+    } catch (err: any) {
+      toast({ title: "Chyba", description: "Nepodařilo se smazat výkazy.", variant: "destructive" });
+    }
+  };
+
   const openEdit = (wo: any) => {
     setEditingWO(wo);
     setEditForm({
@@ -107,6 +118,9 @@ export default function WorkOrdersPage() {
           </Button>
           <Button onClick={handleExport} variant="outline">
             <FileDown className="mr-2 h-4 w-4" /> Stáhnout Excel
+          </Button>
+          <Button onClick={handleDeleteAll} variant="destructive">
+            <Trash className="mr-2 h-4 w-4" /> Smazat vše
           </Button>
         </div>
       </div>

@@ -78,11 +78,14 @@ export class WorkOrdersService {
   async importCsv(file: Express.Multer.File, user: any) {
     const content = file.buffer.toString('utf-8');
     const lines = content.split(/\r?\n/).filter(l => l.trim() !== '');
-    if (lines.length < 2) return { count: 0 };
+    if (lines.length < 1) return { count: 0 };
 
-    const headerLine = lines[0];
-    const separator = headerLine.includes(';') ? ';' : ',';
+    let startIndex = 0;
+    if (lines[0].includes('Oddělení')) {
+      startIndex = 1; // Ignorovat hlavičku
+    }
 
+    const separator = ';'; // Rozdělovat pevně podle středníku
     let count = 0;
     
     let defaultClassroom = await this.prisma.classroom.findFirst();
@@ -92,38 +95,47 @@ export class WorkOrdersService {
         });
     }
 
-    for (let i = 1; i < lines.length; i++) {
-      const parts = lines[i].split(separator);
-      if (parts.length < 8) continue;
-
-      const department = parts[0]?.trim();
-      const dateStr = parts[1]?.trim();
-      const reporter = parts[2]?.trim();
-      const payer = parts[3]?.trim();
-      const subject = parts[4]?.trim() || 'Importovaný výkaz';
-      const material = parts[5]?.trim();
-      const timeSpentStr = parts[6]?.trim();
-      const signature = parts[7]?.trim();
-
-      let createdAt = new Date();
-      if (dateStr) {
-          const parsedDates = dateStr.split('.');
-          if (parsedDates.length === 3) {
-             createdAt = new Date(Number(parsedDates[2]), Number(parsedDates[1]) - 1, Number(parsedDates[0]));
-          } else {
-             const d = new Date(dateStr);
-             if (!isNaN(d.getTime())) createdAt = d;
-          }
+    // Pomocná funkce na parsování data
+    const parseDateStr = (dateStr: string) => {
+      if (!dateStr) return new Date();
+      const cleanStr = dateStr.replace(/\s+/g, '');
+      const parts = cleanStr.split('.');
+      if (parts.length === 3) {
+        return new Date(Number(parts[2]), Number(parts[1]) - 1, Number(parts[0]));
       }
+      return new Date(); // fallback
+    };
+
+    for (let i = startIndex; i < lines.length; i++) {
+      const columns = lines[i].split(separator);
+      if (columns.length < 7) continue;
+
+      const department = columns[0]?.trim();
+      const dateStr = columns[1]?.trim();
+      const reporter = columns[2]?.trim();
+      const payer = columns[3]?.trim();
+      const subject = columns[4]?.trim() || 'Importovaný výkaz';
+      const material = columns[5]?.trim();
+      const timeSpentStr = columns[6]?.trim();
+      const signature = columns[7]?.trim();
+
+      const createdAt = parseDateStr(dateStr);
+      let timeSpent = 0;
+      if (timeSpentStr) {
+          const parsed = parseFloat(timeSpentStr.replace(',', '.'));
+          if (!isNaN(parsed)) timeSpent = parsed;
+      }
+      const description = reporter ? `Zadal: ${reporter}` : 'Importovaný záznam';
 
       await this.prisma.$transaction(async (tx) => {
         const ticket = await tx.ticket.create({
           data: {
              title: subject,
-             description: `[CSV Import] Zadal: ${reporter}`,
+             description: description,
              status: 'APPROVED',
              priority: 'NORMAL',
              isArchived: true,
+             studentWorkNote: 'CSV_IMPORT', // marker pro snadnější budoucí smazání fantomových ticketů
              createdAt,
              updatedAt: createdAt,
              classroomId: defaultClassroom.id,
@@ -137,7 +149,7 @@ export class WorkOrdersService {
               department,
               payer,
               material,
-              timeSpent: timeSpentStr ? parseFloat(timeSpentStr.replace(',', '.')) : 0,
+              timeSpent,
               signature,
               createdAt,
               updatedAt: createdAt
@@ -148,5 +160,17 @@ export class WorkOrdersService {
     }
 
     return { count };
+  }
+
+  async deleteAll() {
+      await this.prisma.$transaction(async (tx) => {
+          // Smazat všechny work orders
+          await tx.workOrder.deleteMany();
+          // Smazat i fantomové tickety spojené s CSV importem
+          await tx.ticket.deleteMany({
+              where: { studentWorkNote: 'CSV_IMPORT' }
+          });
+      });
+      return { success: true };
   }
 }
