@@ -98,7 +98,7 @@ export class StatsService {
     // Populate user details
     const userIds = leaderboard.map((item) => item.userId);
     const users = await this.prisma.user.findMany({
-      where: { id: { in: userIds } },
+      where: { id: { in: userIds }, isActive: true },
       select: { id: true, fullName: true, email: true },
     });
 
@@ -108,7 +108,7 @@ export class StatsService {
         user,
         completedServices: item._count.id,
       };
-    });
+    }).filter(item => item.user); // Only return active users who were found in the isActive: true fetch
   }
 
   async getAdminLeaderboard() {

@@ -229,7 +229,7 @@ export class AttendanceService {
 
   async getAttendanceSummary(from: string, to: string) {
     const students = await this.prisma.user.findMany({
-      where: { role: Role.STUDENT },
+      where: { role: Role.STUDENT, isActive: true },
       include: {
         helpdeskShifts: {
           where: {
