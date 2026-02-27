@@ -89,6 +89,9 @@ export class TicketsService implements OnModuleInit {
         attachments: {
           create: attachmentsData,
         },
+        workOrder: {
+          create: {},
+        },
       },
       include: { attachments: true, classroom: true },
     });
@@ -114,7 +117,7 @@ export class TicketsService implements OnModuleInit {
     page = 1,
     limit = 20,
   ) {
-    const where: any = {};
+    const where: any = { isArchived: false };
 
     if (user.role === Role.STUDENT) {
       if (filter === 'assigned') {

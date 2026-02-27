@@ -18,6 +18,9 @@ import { APP_GUARD } from '@nestjs/core';
 import { AppController } from './app.controller';
 import { AttendanceModule } from './attendance/attendance.module';
 import { ProjectorsModule } from './projectors/projectors.module';
+import { ScheduleModule } from '@nestjs/schedule';
+import { SettingsModule } from './settings/settings.module';
+import { WorkOrdersModule } from './work-orders/work-orders.module';
 
 @Module({
   imports: [
@@ -42,6 +45,9 @@ import { ProjectorsModule } from './projectors/projectors.module';
     ClassroomPcModule,
     AttendanceModule,
     ProjectorsModule,
+    ScheduleModule.forRoot(),
+    SettingsModule,
+    WorkOrdersModule,
   ],
   providers: [
     {
