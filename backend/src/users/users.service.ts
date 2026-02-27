@@ -107,6 +107,9 @@ export class UsersService {
   }
 
   remove(id: string) {
-    return this.prisma.user.delete({ where: { id } });
+    return this.prisma.user.update({
+      where: { id },
+      data: { isActive: false },
+    });
   }
 }
