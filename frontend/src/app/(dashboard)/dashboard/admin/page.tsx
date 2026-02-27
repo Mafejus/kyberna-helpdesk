@@ -57,12 +57,8 @@ export default function AdminDashboard() {
 
         {/* Sidebar - Leaderboard & Overdue */}
         <div className="md:col-span-1 lg:col-span-2 flex flex-col gap-6">
-            <div className="h-1/2">
-                <OverdueTicketsWidget />
-            </div>
-            <div className="h-1/2">
-                <LeaderboardWidget />
-            </div>
+            <OverdueTicketsWidget />
+            <LeaderboardWidget />
         </div>
       </div>
 
