@@ -33,6 +33,7 @@ export class WorkOrdersService {
     const worksheet = workbook.addWorksheet('Výkazy práce');
 
     worksheet.columns = [
+      { header: '#', key: 'orderNumber', width: 10 },
       { header: 'Název / Typ práce', key: 'title', width: 25 },
       { header: 'Technik', key: 'technician', width: 20 },
       { header: 'Datum a čas', key: 'date', width: 25 },
@@ -43,6 +44,7 @@ export class WorkOrdersService {
 
     workOrders.forEach(wo => {
       worksheet.addRow({
+        orderNumber: wo.orderNumber || '',
         title: wo.title || '',
         technician: wo.technician || '',
         date: wo.date || '',
@@ -101,9 +103,16 @@ export class WorkOrdersService {
             const problemDescription = row['popis problému'] || '';
             const resolution = row['řešení problému'] || '';
             const status = row['status'] || 'Uzavřeno';
+            
+            let orderNumber: number | null = null;
+            if (row['událost č.']) {
+                const parsed = parseInt(row['událost č.'], 10);
+                if (!isNaN(parsed)) orderNumber = parsed;
+            }
 
             await this.prisma.workOrder.create({
               data: {
+                orderNumber,
                 title,
                 technician,
                 date: dateVal,

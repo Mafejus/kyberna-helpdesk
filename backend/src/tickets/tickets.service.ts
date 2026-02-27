@@ -78,6 +78,15 @@ export class TicketsService implements OnModuleInit {
     const defaultDueAt = new Date();
     defaultDueAt.setDate(defaultDueAt.getDate() + 7);
 
+    // Get highest orderNumber for WorkOrder
+    const highestWorkOrder = await this.prisma.workOrder.findFirst({
+        orderBy: { orderNumber: 'desc' },
+        select: { orderNumber: true }
+    });
+    
+    // Default to 1 if first one or null
+    const nextOrderNumber = (highestWorkOrder?.orderNumber || 0) + 1;
+
     const ticket = await this.prisma.ticket.create({
       data: {
         title: dto.title,
@@ -90,7 +99,9 @@ export class TicketsService implements OnModuleInit {
           create: attachmentsData,
         },
         workOrder: {
-          create: {},
+          create: {
+             orderNumber: nextOrderNumber
+          },
         },
       },
       include: { attachments: true, classroom: true },

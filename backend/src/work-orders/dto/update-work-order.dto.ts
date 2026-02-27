@@ -1,6 +1,10 @@
-import { IsOptional, IsString } from 'class-validator';
+import { IsOptional, IsString, IsNumber } from 'class-validator';
 
 export class UpdateWorkOrderDto {
+  @IsOptional()
+  @IsNumber()
+  orderNumber?: number;
+
   @IsOptional() @IsString() title?: string;
   @IsOptional() @IsString() technician?: string;
   @IsOptional() @IsString() date?: string;

@@ -23,9 +23,20 @@ import {
   TableHead,
   TableCell,
 } from "@/components/ui/table";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 export default function WorkOrdersPage() {
   const [workOrders, setWorkOrders] = useState<any[]>([]);
+  const [globalFilter, setGlobalFilter] = useState("");
+  const [techFilter, setTechFilter] = useState("ALL");
+  const [statusFilter, setStatusFilter] = useState("ALL");
+
   const { toast } = useToast();
 
   const [editingWO, setEditingWO] = useState<any | null>(null);
@@ -115,6 +126,25 @@ export default function WorkOrdersPage() {
     }
   };
 
+  const uniqueTechnicians = Array.from(new Set(workOrders.map((wo) => wo.technician || "Bez technika"))).filter(Boolean);
+  const uniqueStatuses = Array.from(new Set(workOrders.map((wo) => wo.status || "Bez statusu"))).filter(Boolean);
+
+  const filteredWorkOrders = workOrders.filter((wo) => {
+    // Global filter matches title or problemDescription
+    const matchesGlobal =
+      globalFilter === "" ||
+      (wo.title || "").toLowerCase().includes(globalFilter.toLowerCase()) ||
+      (wo.problemDescription || "").toLowerCase().includes(globalFilter.toLowerCase());
+
+    const tech = wo.technician || "Bez technika";
+    const matchesTech = techFilter === "ALL" || tech === techFilter;
+
+    const status = wo.status || "Bez statusu";
+    const matchesStatus = statusFilter === "ALL" || status === statusFilter;
+
+    return matchesGlobal && matchesTech && matchesStatus;
+  });
+
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
@@ -139,10 +169,42 @@ export default function WorkOrdersPage() {
         </div>
       </div>
       
+      <div className="flex flex-col sm:flex-row gap-4 mb-6">
+        <Input 
+          placeholder="Hledat podle názvu nebo popisu..." 
+          value={globalFilter} 
+          onChange={(e) => setGlobalFilter(e.target.value)}
+          className="max-w-sm"
+        />
+        <Select value={techFilter} onValueChange={setTechFilter}>
+          <SelectTrigger className="w-[180px]">
+            <SelectValue placeholder="Technik" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="ALL">Všichni technici</SelectItem>
+            {uniqueTechnicians.map(tech => (
+              <SelectItem key={tech} value={tech}>{tech}</SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+        <Select value={statusFilter} onValueChange={setStatusFilter}>
+          <SelectTrigger className="w-[180px]">
+            <SelectValue placeholder="Status" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="ALL">Všechny statusy</SelectItem>
+            {uniqueStatuses.map(status => (
+              <SelectItem key={status} value={status}>{status}</SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
+
       <div className="bg-card border rounded-lg overflow-x-auto">
         <Table>
           <TableHeader>
             <TableRow>
+              <TableHead className="w-16">#</TableHead>
               <TableHead>Název / Typ práce</TableHead>
               <TableHead>Technik</TableHead>
               <TableHead>Datum a čas</TableHead>
@@ -153,18 +215,19 @@ export default function WorkOrdersPage() {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {workOrders.length === 0 ? (
+            {filteredWorkOrders.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={7} className="text-center py-4">Zatím žádné výkazy práce.</TableCell>
+                <TableCell colSpan={8} className="text-center py-4">Zatím žádné výkazy práce pro zadané filtry.</TableCell>
               </TableRow>
             ) : (
-              workOrders.map(wo => (
+              filteredWorkOrders.map(wo => (
                 <TableRow key={wo.id}>
-                  <TableCell className="font-medium">{wo.title || "-"}</TableCell>
-                  <TableCell>{wo.technician || "-"}</TableCell>
-                  <TableCell>{wo.date || "-"}</TableCell>
-                  <TableCell className="max-w-xs truncate" title={wo.problemDescription}>{wo.problemDescription || "-"}</TableCell>
-                  <TableCell className="max-w-xs truncate" title={wo.resolution}>{wo.resolution || "-"}</TableCell>
+                  <TableCell className="font-semibold">{wo.orderNumber ? `#${wo.orderNumber}` : "-"}</TableCell>
+                  <TableCell className="font-medium whitespace-pre-wrap min-w-[150px]">{wo.title || "-"}</TableCell>
+                  <TableCell className="whitespace-pre-wrap">{wo.technician || "-"}</TableCell>
+                  <TableCell className="whitespace-pre-wrap">{wo.date || "-"}</TableCell>
+                  <TableCell className="whitespace-pre-wrap min-w-[200px]">{wo.problemDescription || "-"}</TableCell>
+                  <TableCell className="whitespace-pre-wrap min-w-[200px]">{wo.resolution || "-"}</TableCell>
                   <TableCell>{wo.status || "-"}</TableCell>
                   <TableCell className="text-right space-x-2">
                     <Button variant="ghost" size="sm" onClick={() => openEdit(wo)}>

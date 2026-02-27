@@ -410,6 +410,7 @@ model Projector {
 // 7) WORK ORDERS & SYSTEM SETTINGS
 model WorkOrder {
   id                 String   @id @default(uuid())
+  orderNumber        Int?     @unique
   ticketId           String?  @unique
   title              String?
   technician         String?
