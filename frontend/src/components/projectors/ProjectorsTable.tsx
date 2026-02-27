@@ -14,7 +14,7 @@ import { Check, X, Pencil, Trash2 } from "lucide-react";
 
 interface ProjectorsTableProps {
   projectors: Projector[];
-  isAdmin: boolean;
+  canManage: boolean;
   onEdit: (projector: Projector) => void;
   onDelete: (id: string) => void;
 }
@@ -36,7 +36,7 @@ function formatDate(dateStr: string | null): string {
   }
 }
 
-export function ProjectorsTable({ projectors, isAdmin, onEdit, onDelete }: ProjectorsTableProps) {
+export function ProjectorsTable({ projectors, canManage, onEdit, onDelete }: ProjectorsTableProps) {
   if (projectors.length === 0) {
     return (
       <div className="rounded-lg border border-dashed p-8 text-center text-muted-foreground">
@@ -60,7 +60,7 @@ export function ProjectorsTable({ projectors, isAdmin, onEdit, onDelete }: Proje
             <TableHead>USB prodl.</TableHead>
             <TableHead>Poslední kontrola</TableHead>
             <TableHead>Poznámky</TableHead>
-            {isAdmin && <TableHead className="text-right">Akce</TableHead>}
+            {canManage && <TableHead className="text-right">Akce</TableHead>}
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -97,7 +97,7 @@ export function ProjectorsTable({ projectors, isAdmin, onEdit, onDelete }: Proje
               <TableCell>{p.usbExtensionType || "—"}</TableCell>
               <TableCell>{formatDate(p.lastInspectionDate)}</TableCell>
               <TableCell className="max-w-[200px] truncate text-sm text-muted-foreground" title={p.notes || ""}>{p.notes || "—"}</TableCell>
-              {isAdmin && (
+              {canManage && (
                 <TableCell className="text-right">
                   <div className="flex justify-end gap-1">
                     <Button variant="ghost" size="icon" onClick={() => onEdit(p)} title="Upravit">

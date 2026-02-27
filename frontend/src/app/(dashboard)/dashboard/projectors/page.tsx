@@ -15,7 +15,7 @@ export default function ProjectorsPage() {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingProjector, setEditingProjector] = useState<Projector | null>(null);
 
-  const isAdmin = user?.role === "ADMIN";
+  const canManage = user?.role === "ADMIN" || user?.role === "STUDENT";
 
   const fetchProjectors = useCallback(async () => {
     try {
@@ -65,7 +65,7 @@ export default function ProjectorsPage() {
           <h1 className="text-xl sm:text-2xl font-bold tracking-tight">Projektory a Vybavení</h1>
           <p className="text-muted-foreground">Evidence školních projektorů a kateder</p>
         </div>
-        {isAdmin && (
+        {canManage && (
           <Button onClick={() => setDialogOpen(true)} className="w-full sm:w-auto">
             <Plus className="mr-2 h-4 w-4" /> Přidat projektor
           </Button>
@@ -79,13 +79,13 @@ export default function ProjectorsPage() {
       ) : (
         <ProjectorsTable
           projectors={projectors}
-          isAdmin={isAdmin}
+          canManage={canManage}
           onEdit={handleEdit}
           onDelete={handleDelete}
         />
       )}
 
-      {isAdmin && (
+      {canManage && (
         <ProjectorFormDialog
           open={dialogOpen}
           onOpenChange={handleDialogClose}

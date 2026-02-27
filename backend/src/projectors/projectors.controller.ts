@@ -37,19 +37,19 @@ export class ProjectorsController {
   }
 
   @Post()
-  @Roles(Role.ADMIN)
+  @Roles(Role.ADMIN, Role.STUDENT)
   create(@Body() createProjectorDto: CreateProjectorDto) {
     return this.projectorsService.create(createProjectorDto);
   }
 
   @Patch(':id')
-  @Roles(Role.ADMIN)
+  @Roles(Role.ADMIN, Role.STUDENT)
   update(@Param('id') id: string, @Body() updateProjectorDto: UpdateProjectorDto) {
     return this.projectorsService.update(id, updateProjectorDto);
   }
 
   @Delete(':id')
-  @Roles(Role.ADMIN)
+  @Roles(Role.ADMIN, Role.STUDENT)
   remove(@Param('id') id: string) {
     return this.projectorsService.remove(id);
   }
