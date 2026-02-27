@@ -100,7 +100,11 @@ export class TicketsService implements OnModuleInit {
         },
         workOrder: {
           create: {
-             orderNumber: nextOrderNumber
+             orderNumber: nextOrderNumber,
+             title: dto.title,
+             problemDescription: dto.description,
+             status: TicketStatus.UNASSIGNED,
+             date: new Date().toLocaleDateString('cs-CZ'),
           },
         },
       },
@@ -249,6 +253,15 @@ export class TicketsService implements OnModuleInit {
         data: { status: TicketStatus.IN_PROGRESS },
       });
 
+      // Sync WorkOrder
+      await tx.workOrder.updateMany({
+        where: { ticketId: id },
+        data: {
+          status: TicketStatus.IN_PROGRESS,
+          technician: user.fullName, // primary assignee
+        },
+      });
+
       // Audit
       await this.auditService.log({
         actorUserId: user.id,
@@ -294,6 +307,21 @@ export class TicketsService implements OnModuleInit {
           ticketId: id,
           userId: user.id,
           orderIndex: maxOrder + 1,
+        },
+      });
+
+      // Sync WorkOrder
+      const updatedAssignees = await tx.ticketAssignee.findMany({
+        where: { ticketId: id },
+        orderBy: { orderIndex: 'asc' },
+        include: { user: { select: { fullName: true } } },
+      });
+      const techNames = updatedAssignees.map(a => a.user.fullName).join(', ');
+
+      await tx.workOrder.updateMany({
+        where: { ticketId: id },
+        data: {
+          technician: techNames,
         },
       });
 
@@ -359,6 +387,22 @@ export class TicketsService implements OnModuleInit {
         }
       }
 
+      // Sync WorkOrder
+      const finalAssignees = await tx.ticketAssignee.findMany({
+        where: { ticketId: id },
+        orderBy: { orderIndex: 'asc' },
+        include: { user: { select: { fullName: true } } },
+      });
+      const techNames = finalAssignees.map(a => a.user.fullName).join(', ');
+
+      await tx.workOrder.updateMany({
+        where: { ticketId: id },
+        data: {
+          status: newStatus,
+          technician: techNames || null, // remove if no one left
+        },
+      });
+
       // Audit
       await this.auditService.log({
         actorUserId: user.id,
@@ -398,6 +442,15 @@ export class TicketsService implements OnModuleInit {
       data: {
         status: TicketStatus.DONE_WAITING_APPROVAL,
         studentWorkNote: dto.note,
+      },
+    });
+
+    // Sync WorkOrder
+    await this.prisma.workOrder.updateMany({
+      where: { ticketId: id },
+      data: {
+        status: TicketStatus.DONE_WAITING_APPROVAL,
+        resolution: dto.note,
       },
     });
 
@@ -463,6 +516,15 @@ export class TicketsService implements OnModuleInit {
         status: TicketStatus.APPROVED,
         difficultyPoints: dto.difficultyPoints,
         adminApprovalNote: dto.adminApprovalNote,
+      },
+    });
+
+    // Sync WorkOrder
+    await this.prisma.workOrder.updateMany({
+      where: { ticketId: id },
+      data: {
+        status: TicketStatus.APPROVED,
+        resolution: dto.adminApprovalNote ? `(Admin) ${dto.adminApprovalNote}` : undefined,
       },
     });
 
@@ -539,6 +601,14 @@ export class TicketsService implements OnModuleInit {
         data: {
           status: TicketStatus.REJECTED,
           adminApprovalNote: dto.adminApprovalNote,
+        },
+      });
+
+      // Sync WorkOrder
+      await tx.workOrder.updateMany({
+        where: { ticketId: id },
+        data: {
+          status: TicketStatus.REJECTED,
         },
       });
 
@@ -707,6 +777,24 @@ export class TicketsService implements OnModuleInit {
         notificationUserId = dto.userId;
         notificationType = NotificationType.TICKET_UNASSIGNED;
       }
+
+      // Sync WorkOrder
+      const finalAssignees = await tx.ticketAssignee.findMany({
+        where: { ticketId },
+        orderBy: { orderIndex: 'asc' },
+        include: { user: { select: { fullName: true } } },
+      });
+      const techNames = finalAssignees.map(a => a.user.fullName).join(', ');
+      
+      const updatedTicketStats = await tx.ticket.findUnique({ where: { id: ticketId }, select: { status: true }});
+
+      await tx.workOrder.updateMany({
+        where: { ticketId },
+        data: {
+          technician: techNames || null,
+          status: updatedTicketStats?.status,
+        },
+      });
 
       // Commit Audit & Notify
       if (actionLogged) {
