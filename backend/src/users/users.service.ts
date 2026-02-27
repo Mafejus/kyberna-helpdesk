@@ -37,7 +37,7 @@ export class UsersService {
   }
 
   findAll(role?: Role) {
-    const where = role ? { role } : {};
+    const where = role ? { role, isActive: true } : { isActive: true };
     return this.prisma.user.findMany({
       where,
       select: {
