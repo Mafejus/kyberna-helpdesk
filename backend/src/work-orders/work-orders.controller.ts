@@ -35,15 +35,7 @@ export class WorkOrdersController {
   @Get('export')
   @Roles(Role.STUDENT, Role.ADMIN)
   async exportExcel(@Res() res: Response) {
-    const buffer = await this.workOrdersService.exportToExcel();
-    
-    res.set({
-      'Content-Type': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-      'Content-Disposition': 'attachment; filename="vykazy-prace.xlsx"',
-      'Content-Length': buffer.length.toString(),
-    });
-
-    res.end(buffer);
+    await this.workOrdersService.exportToExcel(res);
   }
 
   @Patch(':id')

@@ -12,15 +12,31 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
+  DialogFooter,
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
+import {
+  Table,
+  TableHeader,
+  TableBody,
+  TableRow,
+  TableHead,
+  TableCell,
+} from "@/components/ui/table";
 
 export default function WorkOrdersPage() {
   const [workOrders, setWorkOrders] = useState<any[]>([]);
   const { toast } = useToast();
 
-  const [editingWO, setEditingWO] = useState<any>(null);
-  const [editForm, setEditForm] = useState({ department: "", payer: "", material: "", timeSpent: 0, signature: "" });
+  const [editingWO, setEditingWO] = useState<any | null>(null);
+  const [editForm, setEditForm] = useState({
+    event: "",
+    dateRange: "",
+    problemDescription: "",
+    resolution: "",
+    status: "",
+  });
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
   
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -50,9 +66,7 @@ export default function WorkOrdersPage() {
     formData.append("file", file);
 
     try {
-      await api.post("/work-orders/import", formData, {
-        headers: { "Content-Type": "multipart/form-data" },
-      });
+      await api.post("/work-orders/import", formData);
       toast({ title: "Import úspěšný", description: "Záznamy byly úspěšně naimportovány." });
       fetchWorkOrders();
     } catch (err: any) {
@@ -78,26 +92,24 @@ export default function WorkOrdersPage() {
   const openEdit = (wo: any) => {
     setEditingWO(wo);
     setEditForm({
-      department: wo.department || "",
-      payer: wo.payer || "",
-      material: wo.material || "",
-      timeSpent: wo.timeSpent || 0,
-      signature: wo.signature || "",
+      event: wo.event || "",
+      dateRange: wo.dateRange || "",
+      problemDescription: wo.problemDescription || "",
+      resolution: wo.resolution || "",
+      status: wo.status || "",
     });
+    setEditDialogOpen(true);
   };
 
   const handleUpdate = async () => {
     if (!editingWO) return;
     try {
-      await api.patch(`/work-orders/${editingWO.id}`, {
-          ...editForm,
-          timeSpent: Number(editForm.timeSpent)
-      });
-      toast({ title: "Výkaz upraven" });
+      await api.patch(`/work-orders/${editingWO.id}`, editForm);
+      toast({ title: "Uloženo", description: "Změny byly úspěšně uloženy." });
+      setEditDialogOpen(false);
       fetchWorkOrders();
-      setEditingWO(null);
-    } catch (e) {
-      toast({ title: "Chyba při úpravě", variant: "destructive" });
+    } catch (err) {
+      toast({ title: "Chyba", description: "Nepodařilo se uložit změny.", variant: "destructive" });
     }
   };
 
@@ -126,81 +138,88 @@ export default function WorkOrdersPage() {
       </div>
       
       <div className="bg-card border rounded-lg overflow-x-auto">
-        <table className="w-full text-sm text-left">
-          <thead className="text-xs uppercase bg-muted text-muted-foreground border-b">
-            <tr>
-              <th className="px-4 py-3">Datum / Zadal</th>
-              <th className="px-4 py-3">Předmět práce</th>
-              <th className="px-4 py-3">Oddělení</th>
-              <th className="px-4 py-3">Plátce</th>
-              <th className="px-4 py-3">Materiál</th>
-              <th className="px-4 py-3">Čas (h)</th>
-              <th className="px-4 py-3">Podpis</th>
-              <th className="px-4 py-3 text-right">Akce</th>
-            </tr>
-          </thead>
-          <tbody>
-            {workOrders.map(wo => (
-              <tr key={wo.id} className="border-b last:border-0 hover:bg-muted/50">
-                <td className="px-4 py-3">
-                  <div className="font-semibold">{new Date(wo.ticket?.createdAt).toLocaleDateString("cs-CZ")}</div>
-                  <div className="text-xs text-muted-foreground">{wo.ticket?.createdBy?.fullName}</div>
-                </td>
-                <td className="px-4 py-3">
-                  <div className="font-medium">{wo.ticket?.title}</div>
-                  <div className="text-xs text-muted-foreground truncate max-w-[200px]">{wo.ticket?.description}</div>
-                </td>
-                <td className="px-4 py-3">{wo.department || "-"}</td>
-                <td className="px-4 py-3">{wo.payer || "-"}</td>
-                <td className="px-4 py-3 truncate max-w-[150px]">{wo.material || "-"}</td>
-                <td className="px-4 py-3">{wo.timeSpent || "0"}</td>
-                <td className="px-4 py-3">{wo.signature || "-"}</td>
-                <td className="px-4 py-3 text-right">
-                  <Button variant="ghost" size="sm" onClick={() => openEdit(wo)}>
-                    <Edit className="h-4 w-4" />
-                  </Button>
-                </td>
-              </tr>
-            ))}
-            {workOrders.length === 0 && (
-              <tr>
-                <td colSpan={8} className="px-4 py-8 text-center text-muted-foreground">
-                  Žádné výkazy práce nebyly nalezeny.
-                </td>
-              </tr>
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Událost</TableHead>
+              <TableHead>Datum</TableHead>
+              <TableHead>Popis problému</TableHead>
+              <TableHead>Řešení</TableHead>
+              <TableHead>Status</TableHead>
+              <TableHead className="text-right">Akce</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {workOrders.length === 0 ? (
+              <TableRow>
+                <TableCell colSpan={6} className="text-center py-4">Zatím žádné výkazy práce.</TableCell>
+              </TableRow>
+            ) : (
+              workOrders.map(wo => (
+                <TableRow key={wo.id}>
+                  <TableCell>{wo.event || "-"}</TableCell>
+                  <TableCell>{wo.dateRange || "-"}</TableCell>
+                  <TableCell className="max-w-xs truncate" title={wo.problemDescription}>{wo.problemDescription || "-"}</TableCell>
+                  <TableCell className="max-w-xs truncate" title={wo.resolution}>{wo.resolution || "-"}</TableCell>
+                  <TableCell>{wo.status || "-"}</TableCell>
+                  <TableCell className="text-right space-x-2">
+                    <Button variant="ghost" size="sm" onClick={() => openEdit(wo)}>
+                      <Edit className="h-4 w-4" />
+                    </Button>
+                  </TableCell>
+                </TableRow>
+              ))
             )}
-          </tbody>
-        </table>
+          </TableBody>
+        </Table>
       </div>
 
-      <Dialog open={!!editingWO} onOpenChange={(open) => !open && setEditingWO(null)}>
+      <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Upravit výkaz</DialogTitle>
+            <DialogTitle>Upravit výkaz práce</DialogTitle>
           </DialogHeader>
           <div className="space-y-4 py-4">
             <div className="space-y-2">
-              <Label>Oddělení</Label>
-              <Input value={editForm.department} onChange={e => setEditForm({...editForm, department: e.target.value})} />
+              <label className="text-sm font-medium">Událost</label>
+              <Input 
+                value={editForm.event} 
+                onChange={(e) => setEditForm({...editForm, event: e.target.value})} 
+              />
             </div>
             <div className="space-y-2">
-              <Label>Kdo to bude platit</Label>
-              <Input value={editForm.payer} onChange={e => setEditForm({...editForm, payer: e.target.value})} />
+              <label className="text-sm font-medium">Datum</label>
+              <Input 
+                value={editForm.dateRange} 
+                onChange={(e) => setEditForm({...editForm, dateRange: e.target.value})} 
+              />
             </div>
             <div className="space-y-2">
-              <Label>Materiál</Label>
-              <Input value={editForm.material} onChange={e => setEditForm({...editForm, material: e.target.value})} />
+              <label className="text-sm font-medium">Popis problému</label>
+              <Input 
+                value={editForm.problemDescription} 
+                onChange={(e) => setEditForm({...editForm, problemDescription: e.target.value})} 
+              />
             </div>
             <div className="space-y-2">
-              <Label>Čas (v hodinách)</Label>
-              <Input type="number" step="0.5" value={editForm.timeSpent} onChange={e => setEditForm({...editForm, timeSpent: parseFloat(e.target.value) || 0})} />
+              <label className="text-sm font-medium">Řešení</label>
+              <Input 
+                value={editForm.resolution} 
+                onChange={(e) => setEditForm({...editForm, resolution: e.target.value})} 
+              />
             </div>
             <div className="space-y-2">
-              <Label>Podpis</Label>
-              <Input value={editForm.signature} onChange={e => setEditForm({...editForm, signature: e.target.value})} />
+              <label className="text-sm font-medium">Status</label>
+              <Input 
+                value={editForm.status} 
+                onChange={(e) => setEditForm({...editForm, status: e.target.value})} 
+              />
             </div>
-            <Button onClick={handleUpdate} className="w-full">Uložit změny</Button>
           </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setEditDialogOpen(false)}>Zrušit</Button>
+            <Button onClick={handleUpdate}>Uložit</Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
     </div>

@@ -1,9 +1,9 @@
-import { IsOptional, IsString, IsNumber } from 'class-validator';
+import { IsOptional, IsString } from 'class-validator';
 
 export class UpdateWorkOrderDto {
-  @IsOptional() @IsString() department?: string;
-  @IsOptional() @IsString() payer?: string;
-  @IsOptional() @IsString() material?: string;
-  @IsOptional() @IsNumber() timeSpent?: number;
-  @IsOptional() @IsString() signature?: string;
+  @IsOptional() @IsString() event?: string;
+  @IsOptional() @IsString() dateRange?: string;
+  @IsOptional() @IsString() problemDescription?: string;
+  @IsOptional() @IsString() resolution?: string;
+  @IsOptional() @IsString() status?: string;
 }

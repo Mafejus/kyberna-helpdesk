@@ -409,18 +409,18 @@ model Projector {
 
 // 7) WORK ORDERS & SYSTEM SETTINGS
 model WorkOrder {
-  id         String   @id @default(uuid())
-  ticketId   String   @unique
-  department String?
-  payer      String?
-  material   String?
-  timeSpent  Float?
-  signature  String?
+  id                 String   @id @default(uuid())
+  ticketId           String?  @unique
+  event              String?
+  dateRange          String?
+  problemDescription String?
+  resolution         String?
+  status             String?
 
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
 
-  ticket     Ticket   @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+  ticket     Ticket?  @relation(fields: [ticketId], references: [id], onDelete: Cascade)
 }
 
 model SystemSetting {
