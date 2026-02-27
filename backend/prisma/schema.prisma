@@ -411,8 +411,9 @@ model Projector {
 model WorkOrder {
   id                 String   @id @default(uuid())
   ticketId           String?  @unique
-  event              String?
-  dateRange          String?
+  title              String?
+  technician         String?
+  date               String?
   problemDescription String?
   resolution         String?
   status             String?

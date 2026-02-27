@@ -3,6 +3,8 @@ import { PrismaService } from '../prisma/prisma.service';
 import { UpdateWorkOrderDto } from './dto/update-work-order.dto';
 import * as ExcelJS from 'exceljs';
 import { Response } from 'express';
+import * as csv from 'csv-parser';
+import { Readable } from 'stream';
 
 @Injectable()
 export class WorkOrdersService {
@@ -31,8 +33,9 @@ export class WorkOrdersService {
     const worksheet = workbook.addWorksheet('Výkazy práce');
 
     worksheet.columns = [
-      { header: 'Událost', key: 'event', width: 20 },
-      { header: 'Datum', key: 'dateRange', width: 25 },
+      { header: 'Název / Typ práce', key: 'title', width: 25 },
+      { header: 'Technik', key: 'technician', width: 20 },
+      { header: 'Datum a čas', key: 'date', width: 25 },
       { header: 'Popis problému', key: 'problemDescription', width: 35 },
       { header: 'Řešení', key: 'resolution', width: 35 },
       { header: 'Status', key: 'status', width: 15 },
@@ -40,8 +43,9 @@ export class WorkOrdersService {
 
     workOrders.forEach(wo => {
       worksheet.addRow({
-        event: wo.event || '',
-        dateRange: wo.dateRange || '',
+        title: wo.title || '',
+        technician: wo.technician || '',
+        date: wo.date || '',
         problemDescription: wo.problemDescription || '',
         resolution: wo.resolution || '',
         status: wo.status || '',
@@ -63,46 +67,59 @@ export class WorkOrdersService {
   }
 
   async importCsv(file: Express.Multer.File, user: any) {
-    // Try to handle CP1250 mangling or standard UTF-8
-    const content = file.buffer.toString('utf-8');
-    const lines = content.split(/\r?\n/).filter(l => l.trim().length > 0);
-    if (lines.length < 2) return { count: 0 }; // Need at least header + 1 row
+    if (!file || !file.buffer) return { count: 0 };
 
-    let count = 0;
-    
-    // Zjistit separator z prvniho radku
-    const firstLine = lines[0];
-    const separator = firstLine.includes(';') ? ';' : ',';
+    return new Promise((resolve, reject) => {
+      const results: any[] = [];
+      const stream = Readable.from(file.buffer);
 
-    for (let i = 1; i < lines.length; i++) {
-      const columns = lines[i].split(separator);
-      if (columns.length < 12) continue; // We expect roughly 12 columns based on instructions
+      stream
+        .pipe(csv({ separator: ',' }))
+        .on('data', (row: any) => {
+          // Normalizujeme klíče ignorováním mezer a malými písmeny
+          const normalizedRow: Record<string, string> = {};
+          for (const key in row) {
+             normalizedRow[key.trim().toLowerCase()] = row[key]?.trim();
+          }
 
-      const event = columns[0]?.trim();
-      const dateOd = columns[3]?.trim();
-      const dateDo = columns[4]?.trim();
-      const problemDescription = columns[9]?.trim();
-      const resolution = columns[10]?.trim();
-      const status = columns[11]?.trim();
+          results.push(normalizedRow);
+        })
+        .on('end', async () => {
+          let count = 0;
+          for (const row of results) {
+            const title = row['upřesnění'] || row['typ'] || 'Bez názvu';
+            const technician = row['technik'] || '';
+            
+            const datum = row['datum'] || '';
+            const od = row['od'] || '';
+            const doTime = row['do'] || '';
+            let dateVal = datum;
+            if (od || doTime) {
+                dateVal = `${datum} (${od} - ${doTime})`.trim();
+            }
 
-      let dateRange = dateOd;
-      if (dateDo && dateOd !== dateDo) {
-          dateRange = `${dateOd} - ${dateDo}`;
-      }
+            const problemDescription = row['popis problému'] || '';
+            const resolution = row['řešení problému'] || '';
+            const status = row['status'] || 'Uzavřeno';
 
-      await this.prisma.workOrder.create({
-         data: {
-            event,
-            dateRange,
-            problemDescription,
-            resolution,
-            status
-         }
-      });
-      count++;
-    }
-
-    return { count };
+            await this.prisma.workOrder.create({
+              data: {
+                title,
+                technician,
+                date: dateVal,
+                problemDescription,
+                resolution,
+                status,
+              },
+            });
+            count++;
+          }
+          resolve({ count });
+        })
+        .on('error', (error) => {
+          reject(error);
+        });
+    });
   }
 
   async deleteAll() {

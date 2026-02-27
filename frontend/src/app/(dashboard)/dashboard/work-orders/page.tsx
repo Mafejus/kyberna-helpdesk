@@ -30,8 +30,9 @@ export default function WorkOrdersPage() {
 
   const [editingWO, setEditingWO] = useState<any | null>(null);
   const [editForm, setEditForm] = useState({
-    event: "",
-    dateRange: "",
+    title: "",
+    technician: "",
+    date: "",
     problemDescription: "",
     resolution: "",
     status: "",
@@ -92,8 +93,9 @@ export default function WorkOrdersPage() {
   const openEdit = (wo: any) => {
     setEditingWO(wo);
     setEditForm({
-      event: wo.event || "",
-      dateRange: wo.dateRange || "",
+      title: wo.title || "",
+      technician: wo.technician || "",
+      date: wo.date || "",
       problemDescription: wo.problemDescription || "",
       resolution: wo.resolution || "",
       status: wo.status || "",
@@ -141,8 +143,9 @@ export default function WorkOrdersPage() {
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Událost</TableHead>
-              <TableHead>Datum</TableHead>
+              <TableHead>Název / Typ práce</TableHead>
+              <TableHead>Technik</TableHead>
+              <TableHead>Datum a čas</TableHead>
               <TableHead>Popis problému</TableHead>
               <TableHead>Řešení</TableHead>
               <TableHead>Status</TableHead>
@@ -152,13 +155,14 @@ export default function WorkOrdersPage() {
           <TableBody>
             {workOrders.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={6} className="text-center py-4">Zatím žádné výkazy práce.</TableCell>
+                <TableCell colSpan={7} className="text-center py-4">Zatím žádné výkazy práce.</TableCell>
               </TableRow>
             ) : (
               workOrders.map(wo => (
                 <TableRow key={wo.id}>
-                  <TableCell>{wo.event || "-"}</TableCell>
-                  <TableCell>{wo.dateRange || "-"}</TableCell>
+                  <TableCell className="font-medium">{wo.title || "-"}</TableCell>
+                  <TableCell>{wo.technician || "-"}</TableCell>
+                  <TableCell>{wo.date || "-"}</TableCell>
                   <TableCell className="max-w-xs truncate" title={wo.problemDescription}>{wo.problemDescription || "-"}</TableCell>
                   <TableCell className="max-w-xs truncate" title={wo.resolution}>{wo.resolution || "-"}</TableCell>
                   <TableCell>{wo.status || "-"}</TableCell>
@@ -181,17 +185,24 @@ export default function WorkOrdersPage() {
           </DialogHeader>
           <div className="space-y-4 py-4">
             <div className="space-y-2">
-              <label className="text-sm font-medium">Událost</label>
+              <label className="text-sm font-medium">Název / Typ práce</label>
               <Input 
-                value={editForm.event} 
-                onChange={(e) => setEditForm({...editForm, event: e.target.value})} 
+                value={editForm.title} 
+                onChange={(e) => setEditForm({...editForm, title: e.target.value})} 
               />
             </div>
             <div className="space-y-2">
-              <label className="text-sm font-medium">Datum</label>
+              <label className="text-sm font-medium">Technik</label>
               <Input 
-                value={editForm.dateRange} 
-                onChange={(e) => setEditForm({...editForm, dateRange: e.target.value})} 
+                value={editForm.technician} 
+                onChange={(e) => setEditForm({...editForm, technician: e.target.value})} 
+              />
+            </div>
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Datum a čas</label>
+              <Input 
+                value={editForm.date} 
+                onChange={(e) => setEditForm({...editForm, date: e.target.value})} 
               />
             </div>
             <div className="space-y-2">
