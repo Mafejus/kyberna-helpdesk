@@ -131,6 +131,11 @@ export class WorkOrdersService {
     });
   }
 
+  async deleteOne(id: string) {
+      await this.prisma.workOrder.delete({ where: { id } });
+      return { success: true };
+  }
+
   async deleteAll() {
       await this.prisma.workOrder.deleteMany();
       return { success: true };

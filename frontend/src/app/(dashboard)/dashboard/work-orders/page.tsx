@@ -30,8 +30,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { useAuth } from "@/context/AuthContext";
 
 export default function WorkOrdersPage() {
+  const { user } = useAuth();
   const [workOrders, setWorkOrders] = useState<any[]>([]);
   const [globalFilter, setGlobalFilter] = useState("");
   const [techFilter, setTechFilter] = useState("ALL");
@@ -101,6 +103,17 @@ export default function WorkOrdersPage() {
     }
   };
 
+  const handleDeleteOne = async (id: string) => {
+    if (!confirm("Opravdu chcete smazat tento výkaz práce? Tato akce nesmaže vázaný ticket.")) return;
+    try {
+      await api.delete(`/work-orders/${id}`);
+      toast({ title: "Smazáno", description: "Výkaz byl úspěšně smazán." });
+      fetchWorkOrders();
+    } catch (err: any) {
+      toast({ title: "Chyba", description: "Nepodařilo se smazat výkaz.", variant: "destructive" });
+    }
+  };
+
   const openEdit = (wo: any) => {
     setEditingWO(wo);
     setEditForm({
@@ -127,7 +140,7 @@ export default function WorkOrdersPage() {
   };
 
   const uniqueTechnicians = Array.from(new Set(workOrders.map((wo) => wo.technician || "Bez technika"))).filter(Boolean);
-  const uniqueStatuses = Array.from(new Set(workOrders.map((wo) => wo.status || "Bez statusu"))).filter(Boolean);
+  const TICKET_STATUSES = ["UNASSIGNED", "IN_PROGRESS", "DONE_WAITING_APPROVAL", "APPROVED", "REJECTED", "CLOSED"];
 
   const filteredWorkOrders = workOrders.filter((wo) => {
     // Global filter matches title or problemDescription
@@ -157,15 +170,19 @@ export default function WorkOrdersPage() {
             ref={fileInputRef}
             onChange={handleImport}
           />
-          <Button onClick={() => fileInputRef.current?.click()} variant="outline">
-            <UploadCloud className="mr-2 h-4 w-4" /> Importovat z CSV
-          </Button>
+          {user?.role === "ADMIN" && (
+            <Button onClick={() => fileInputRef.current?.click()} variant="outline">
+              <UploadCloud className="mr-2 h-4 w-4" /> Importovat z CSV
+            </Button>
+          )}
           <Button onClick={handleExport} variant="outline">
             <FileDown className="mr-2 h-4 w-4" /> Stáhnout Excel
           </Button>
-          <Button onClick={handleDeleteAll} variant="destructive">
-            <Trash className="mr-2 h-4 w-4" /> Smazat vše
-          </Button>
+          {user?.role === "ADMIN" && (
+            <Button onClick={handleDeleteAll} variant="destructive">
+              <Trash className="mr-2 h-4 w-4" /> Smazat vše
+            </Button>
+          )}
         </div>
       </div>
       
@@ -193,7 +210,7 @@ export default function WorkOrdersPage() {
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="ALL">Všechny statusy</SelectItem>
-            {uniqueStatuses.map(status => (
+            {TICKET_STATUSES.map(status => (
               <SelectItem key={status} value={status}>{status}</SelectItem>
             ))}
           </SelectContent>
@@ -231,7 +248,7 @@ export default function WorkOrdersPage() {
                   <TableCell>{wo.status || "-"}</TableCell>
                   <TableCell className="text-right space-x-2">
                     {wo.ticketId && (
-                      <Button variant="ghost" size="sm" onClick={() => window.location.href = `/dashboard/tickets/${wo.ticketId}`} title="Zobrazit Ticket">
+                      <Button variant="ghost" size="sm" onClick={() => window.location.href = `/tickets/${wo.ticketId}`} title="Zobrazit Ticket">
                         <svg className="w-4 h-4" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
                           <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 14v4.833A1.166 1.166 0 0 1 16.833 20H5.167A1.167 1.167 0 0 1 4 18.833V7.167A1.166 1.166 0 0 1 5.167 6h4.618m4.447-2H20v5.768m-7.889 2.121 7.778-7.778"/>
                         </svg>
@@ -240,6 +257,11 @@ export default function WorkOrdersPage() {
                     <Button variant="ghost" size="sm" onClick={() => openEdit(wo)} title="Upravit Výkaz">
                       <Edit className="h-4 w-4" />
                     </Button>
+                    {user?.role === "ADMIN" && (
+                      <Button variant="ghost" size="sm" onClick={() => handleDeleteOne(wo.id)} title="Smazat Výkaz" className="text-destructive hover:text-destructive">
+                        <Trash className="h-4 w-4" />
+                      </Button>
+                    )}
                   </TableCell>
                 </TableRow>
               ))

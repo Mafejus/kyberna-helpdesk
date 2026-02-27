@@ -44,6 +44,12 @@ export class WorkOrdersController {
     return this.workOrdersService.update(id, dto);
   }
 
+  @Delete(':id')
+  @Roles(Role.ADMIN)
+  deleteOne(@Param('id') id: string) {
+    return this.workOrdersService.deleteOne(id);
+  }
+
   @Delete()
   @Roles(Role.ADMIN)
   deleteAll() {
