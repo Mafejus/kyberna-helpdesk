@@ -129,6 +129,7 @@ export class TicketsService implements OnModuleInit {
     user: User,
     status?: TicketStatus,
     filter?: string,
+    technicianId?: string,
     page = 1,
     limit = 20,
   ) {
@@ -142,6 +143,14 @@ export class TicketsService implements OnModuleInit {
 
     if (status) {
       where.status = status;
+    }
+
+    if (technicianId) {
+      if (where.assignees) {
+        where.assignees.some.userId = technicianId; // Combine if already assigned filter is present, though unlikely practically unless self-filtering. To be safe:
+        // Let's just override since it's an AND condition conceptually
+      }
+      where.assignees = { some: { userId: technicianId } };
     }
 
     if (user.role === Role.TEACHER) {

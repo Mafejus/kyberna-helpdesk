@@ -36,6 +36,14 @@ export class UsersService {
     });
   }
 
+  findTechnicians() {
+    return this.prisma.user.findMany({
+      where: { role: Role.STUDENT, isActive: true },
+      select: { id: true, fullName: true },
+      orderBy: { fullName: 'asc' },
+    });
+  }
+
   findAll(role?: Role) {
     const where = role ? { role, isActive: true } : { isActive: true };
     return this.prisma.user.findMany({

@@ -49,6 +49,7 @@ export class TicketsController {
     @Request() req,
     @Query('status') status?: TicketStatus,
     @Query('filter') filter?: string,
+    @Query('technicianId') technicianId?: string,
     @Query('page') page = '1',
     @Query('limit') limit = '20',
   ) {
@@ -56,6 +57,7 @@ export class TicketsController {
       req.user,
       status,
       filter,
+      technicianId,
       Number(page),
       Number(limit),
     );

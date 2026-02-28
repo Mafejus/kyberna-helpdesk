@@ -43,6 +43,12 @@ export class UsersController {
     return this.usersService.create(createUserDto);
   }
 
+  @Get('technicians')
+  @Roles(Role.ADMIN, Role.TEACHER, Role.STUDENT)
+  findTechnicians() {
+    return this.usersService.findTechnicians();
+  }
+
   @Get()
   @Roles(Role.ADMIN)
   findAll(@Query('role') role?: Role) {

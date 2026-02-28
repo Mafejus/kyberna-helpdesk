@@ -4,6 +4,7 @@ import api from "@/lib/api";
 export interface TicketListParams {
   status?: string;
   filter?: string; // 'assigned' etc.
+  technicianId?: string;
   limit?: number;
   cursor?: string;
 }

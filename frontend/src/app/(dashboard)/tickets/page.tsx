@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, useMemo } from "react";
+import api from "@/lib/api";
 import { TicketsService } from "@/services/tickets.service";
 import { usePaginatedList } from "@/hooks/usePaginatedList";
 import { Button } from "@/components/ui/button";
@@ -35,8 +36,16 @@ const TICKET_STATUSES = ["UNASSIGNED", "IN_PROGRESS", "DONE_WAITING_APPROVAL", "
 export default function TicketListPage() {
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<string | undefined>(undefined);
+  const [technicianFilter, setTechnicianFilter] = useState<string | undefined>(undefined);
+  const [technicians, setTechnicians] = useState<{id: string, fullName: string}[]>([]);
   const { user } = useAuth();
   const searchParams = useSearchParams();
+
+  useEffect(() => {
+     api.get('/users/technicians')
+       .then(res => setTechnicians(res.data))
+       .catch(err => console.error("Failed to fetch technicians:", err));
+  }, []);
 
   // Initialize status filter from URL
   useEffect(() => {
@@ -50,7 +59,7 @@ export default function TicketListPage() {
 
   const { items: tickets, loading, loadMore, nextCursor } = usePaginatedList<any>(
     TicketsService.list,
-    { status: statusFilter }, // Filters passed to hook/service
+    { status: statusFilter, technicianId: technicianFilter }, // Filters passed to hook/service
     20 // limit
   );
 
@@ -86,6 +95,18 @@ export default function TicketListPage() {
                <SelectItem value="ALL">Všechny statusy</SelectItem>
                {TICKET_STATUSES.map(status => (
                  <SelectItem key={status} value={status}>{status}</SelectItem>
+               ))}
+             </SelectContent>
+          </Select>
+
+          <Select value={technicianFilter || "ALL"} onValueChange={(val) => setTechnicianFilter(val === "ALL" ? undefined : val)}>
+             <SelectTrigger className="w-[180px]">
+               <SelectValue placeholder="Technik" />
+             </SelectTrigger>
+             <SelectContent>
+               <SelectItem value="ALL">Všichni technici</SelectItem>
+               {technicians.map(tech => (
+                 <SelectItem key={tech.id} value={tech.id}>{tech.fullName}</SelectItem>
                ))}
              </SelectContent>
           </Select>
