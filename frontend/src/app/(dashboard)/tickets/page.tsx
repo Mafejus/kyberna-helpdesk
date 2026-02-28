@@ -10,8 +10,15 @@ import { useAuth } from "@/context/AuthContext";
 import { useSearchParams } from "next/navigation";
 import { TicketList } from "@/components/dashboard/TicketList";
 import { Loader2 } from "lucide-react";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
-// Assuming Ticket type is exported from TicketList or we need to define/import it.
+const TICKET_STATUSES = ["UNASSIGNED", "IN_PROGRESS", "DONE_WAITING_APPROVAL", "APPROVED", "REJECTED", "CLOSED"];
 // Checking TicketList.tsx, it likely imports Ticket from somewhere or defines it.
 // Ideally usage: usePaginatedList<Ticket>(...)
 // But since I don't want to hunt for the type definition file if it's complex, 
@@ -71,6 +78,17 @@ export default function TicketListPage() {
              onChange={e => setSearch(e.target.value)} 
              className="w-full sm:max-w-xs"
           />
+          <Select value={statusFilter || "ALL"} onValueChange={(val) => setStatusFilter(val === "ALL" ? undefined : val)}>
+             <SelectTrigger className="w-[180px]">
+               <SelectValue placeholder="Status" />
+             </SelectTrigger>
+             <SelectContent>
+               <SelectItem value="ALL">Všechny statusy</SelectItem>
+               {TICKET_STATUSES.map(status => (
+                 <SelectItem key={status} value={status}>{status}</SelectItem>
+               ))}
+             </SelectContent>
+          </Select>
       </div>
 
       <TicketList 

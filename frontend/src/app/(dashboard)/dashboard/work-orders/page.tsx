@@ -139,7 +139,28 @@ export default function WorkOrdersPage() {
     }
   };
 
-  const uniqueTechnicians = Array.from(new Set(workOrders.map((wo) => wo.technician || "Bez technika"))).filter(Boolean);
+  const getNormalizeTechName = (name: string) => {
+    const p = name.trim().split(/[\s-]+/);
+    if(p.length === 2) return p.sort().join(' ').toLowerCase();
+    return name.trim().toLowerCase();
+  };
+
+  const techNames = workOrders.flatMap(wo => (wo.technician || "Bez technika").split(','));
+  const normalizedSet = new Set<string>();
+  const uniqueTechnicians: string[] = [];
+
+  techNames.forEach(name => {
+      const raw = name.trim();
+      if (!raw) return;
+      const norm = getNormalizeTechName(raw);
+      if (!normalizedSet.has(norm)) {
+          normalizedSet.add(norm);
+          uniqueTechnicians.push(raw);
+      }
+  });
+
+  uniqueTechnicians.sort();
+
   const TICKET_STATUSES = ["UNASSIGNED", "IN_PROGRESS", "DONE_WAITING_APPROVAL", "APPROVED", "REJECTED", "CLOSED"];
 
   const filteredWorkOrders = workOrders.filter((wo) => {
@@ -149,8 +170,8 @@ export default function WorkOrdersPage() {
       (wo.title || "").toLowerCase().includes(globalFilter.toLowerCase()) ||
       (wo.problemDescription || "").toLowerCase().includes(globalFilter.toLowerCase());
 
-    const tech = wo.technician || "Bez technika";
-    const matchesTech = techFilter === "ALL" || tech === techFilter;
+    const techArray = (wo.technician || "Bez technika").split(',');
+    const matchesTech = techFilter === "ALL" || techArray.some((n: string) => getNormalizeTechName(n) === getNormalizeTechName(techFilter));
 
     const status = wo.status || "Bez statusu";
     const matchesStatus = statusFilter === "ALL" || status === statusFilter;
