@@ -274,6 +274,12 @@ export class AttendanceService {
           now,
         );
 
+        // Skip future/ongoing shifts – they haven't happened yet so they must
+        // not influence the reliability percentage or any stat counters.
+        if (status === 'UPCOMING' || status === 'IN_PROGRESS') {
+          continue;
+        }
+
         totalShifts++;
         totalMinutesWorked += minutesWorked;
 
@@ -283,36 +289,13 @@ export class AttendanceService {
             break;
           case 'LATE':
             lateShifts++;
-            break; // "LATE" usually counts as worked too? Or separate?
-          // Request says: "workedShifts", "lateShifts". Usually disjoint or overlapping?
-          // "Odpracováno dnes" vs "Pozdní dnes".
-          // Logic: If LATE, is it WORKED? Usually yes but flagged.
-          // Let's count specific buckets.
-          // "totalWorked" usually implies they showed up.
-          // Let's assume "workedShifts" = WORKED + LATE + MISSING_CHECKOUT (they were there).
-          // But strictly the prompt asks for specific fields.
-
-          // Let's separate them:
-          // workedShifts (Pure worked?)
-          // lateShifts
-          // noShowShifts
-          // missingCheckoutShifts
-
-          // But wait: "Admin musí vidět ... kolik odpracoval".
-          // I will make "workedShifts" be the count of non-NoShow?
-          // Or strict status === WORKED?
-          // Let's stick to status counts for the grid, but "totalWorked" metric might combine.
-          // In the summary object I will return strict counts per status.
-          // And user can sum them up if needed.
-
+            break;
           case 'NO_SHOW':
             noShowShifts++;
             break;
           case 'MISSING_CHECKOUT':
             missingCheckoutShifts++;
             break;
-          case 'IN_PROGRESS':
-            break; // Don't count as worked yet? Or do?
         }
       }
 
