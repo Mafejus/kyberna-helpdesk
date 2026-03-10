@@ -1,6 +1,6 @@
 import api from '@/lib/api';
 
-export type EquipmentType = 'PROJECTOR' | 'AUDIO' | 'HUB' | 'ACCESS_POINT';
+export type EquipmentType = 'PROJECTOR' | 'AUDIO' | 'HUB' | 'ACCESS_POINT' | 'OTHER';
 
 export interface Equipment {
   id: string;

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
+import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import { ProjectorService, Equipment, EquipmentType } from "@/services/projector.service";
 import { EquipmentTable } from "@/components/projectors/ProjectorsTable";
@@ -14,6 +15,7 @@ const TABS: { value: EquipmentType; label: string }[] = [
   { value: "HUB", label: "Hub" },
   { value: "AUDIO", label: "Audio technika" },
   { value: "ACCESS_POINT", label: "APčka" },
+  { value: "OTHER", label: "Ostatní" },
 ];
 
 const ADD_LABELS: Record<EquipmentType, string> = {
@@ -21,15 +23,24 @@ const ADD_LABELS: Record<EquipmentType, string> = {
   HUB: "Přidat hub",
   AUDIO: "Přidat audio",
   ACCESS_POINT: "Přidat AP",
+  OTHER: "Přidat vybavení",
 };
 
 export default function EquipmentPage() {
   const { user } = useAuth();
+  const router = useRouter();
   const [activeTab, setActiveTab] = useState<EquipmentType>("PROJECTOR");
   const [items, setItems] = useState<Equipment[]>([]);
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingItem, setEditingItem] = useState<Equipment | null>(null);
+
+  // Only ADMIN and STUDENT can access this page
+  useEffect(() => {
+    if (user && user.role !== "ADMIN" && user.role !== "STUDENT") {
+      router.replace("/dashboard");
+    }
+  }, [user, router]);
 
   const canManage = user?.role === "ADMIN" || user?.role === "STUDENT";
 
@@ -46,8 +57,8 @@ export default function EquipmentPage() {
   }, []);
 
   useEffect(() => {
-    fetchItems(activeTab);
-  }, [activeTab, fetchItems]);
+    if (canManage) fetchItems(activeTab);
+  }, [activeTab, fetchItems, canManage]);
 
   const handleTabChange = (value: string) => {
     setActiveTab(value as EquipmentType);
@@ -80,6 +91,15 @@ export default function EquipmentPage() {
     fetchItems(activeTab);
   };
 
+  // Render nothing while redirecting non-authorized users
+  if (!user || (user.role !== "ADMIN" && user.role !== "STUDENT")) {
+    return (
+      <div className="flex items-center justify-center py-24">
+        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
@@ -87,11 +107,9 @@ export default function EquipmentPage() {
           <h1 className="text-xl sm:text-2xl font-bold tracking-tight">Vybavení</h1>
           <p className="text-muted-foreground">Evidence školního vybavení</p>
         </div>
-        {canManage && (
-          <Button onClick={() => setDialogOpen(true)} className="w-full sm:w-auto">
-            <Plus className="mr-2 h-4 w-4" /> {ADD_LABELS[activeTab]}
-          </Button>
-        )}
+        <Button onClick={() => setDialogOpen(true)} className="w-full sm:w-auto">
+          <Plus className="mr-2 h-4 w-4" /> {ADD_LABELS[activeTab]}
+        </Button>
       </div>
 
       <Tabs value={activeTab} onValueChange={handleTabChange}>
@@ -122,15 +140,13 @@ export default function EquipmentPage() {
         ))}
       </Tabs>
 
-      {canManage && (
-        <EquipmentFormDialog
-          open={dialogOpen}
-          onOpenChange={handleDialogClose}
-          item={editingItem}
-          equipmentType={activeTab}
-          onSaved={handleSaved}
-        />
-      )}
+      <EquipmentFormDialog
+        open={dialogOpen}
+        onOpenChange={handleDialogClose}
+        item={editingItem}
+        equipmentType={activeTab}
+        onSaved={handleSaved}
+      />
     </div>
   );
 }

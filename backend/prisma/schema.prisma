@@ -395,6 +395,7 @@ enum EquipmentType {
   AUDIO
   HUB
   ACCESS_POINT
+  OTHER
 }
 
 model Projector {
