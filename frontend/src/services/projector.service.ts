@@ -1,56 +1,86 @@
 import api from '@/lib/api';
 
-export interface Projector {
+export type EquipmentType = 'PROJECTOR' | 'AUDIO' | 'HUB' | 'ACCESS_POINT';
+
+export interface Equipment {
   id: string;
+  equipmentType: EquipmentType;
   classroom: string;
-  hasDellDock: boolean;
+  brand: string | null;
+  model: string | null;
   isFunctional: boolean;
+  lastInspectionDate: string | null;
+  notes: string | null;
+  // Projector-specific
+  hasDellDock: boolean;
   hasHdmi: boolean;
   hasHdmiExtension: boolean;
   usbExtensionType: string | null;
-  brand: string;
-  model: string;
   lampHours: string | null;
-  lastInspectionDate: string | null;
-  notes: string | null;
+  // Hub-specific
+  hubType: string | null;
+  // Audio-specific
+  audioStatus: string | null;
+  missingItems: string | null;
+  // AP-specific
+  apType: string | null;
+  hasEduroam: boolean;
+  hasGuestNetwork: boolean;
   createdAt: string;
   updatedAt: string;
 }
 
-export interface CreateProjectorData {
+// Legacy alias for backward compatibility
+export type Projector = Equipment;
+
+export interface CreateEquipmentData {
+  equipmentType?: EquipmentType;
   classroom: string;
-  brand: string;
-  model: string;
-  hasDellDock?: boolean;
+  brand?: string;
+  model?: string;
   isFunctional?: boolean;
+  lastInspectionDate?: string;
+  notes?: string;
+  // Projector-specific
+  hasDellDock?: boolean;
   hasHdmi?: boolean;
   hasHdmiExtension?: boolean;
   usbExtensionType?: string;
   lampHours?: string;
-  lastInspectionDate?: string;
-  notes?: string;
+  // Hub-specific
+  hubType?: string;
+  // Audio-specific
+  audioStatus?: string;
+  missingItems?: string;
+  // AP-specific
+  apType?: string;
+  hasEduroam?: boolean;
+  hasGuestNetwork?: boolean;
 }
 
-export type UpdateProjectorData = Partial<CreateProjectorData>;
+export type CreateProjectorData = CreateEquipmentData;
+export type UpdateEquipmentData = Partial<CreateEquipmentData>;
+export type UpdateProjectorData = UpdateEquipmentData;
 
 export const ProjectorService = {
-  getAll: async () => {
-    const response = await api.get<Projector[]>('/projectors');
+  getAll: async (type?: EquipmentType) => {
+    const params = type ? { params: { type } } : {};
+    const response = await api.get<Equipment[]>('/projectors', params);
     return response.data;
   },
 
   getOne: async (id: string) => {
-    const response = await api.get<Projector>(`/projectors/${id}`);
+    const response = await api.get<Equipment>(`/projectors/${id}`);
     return response.data;
   },
 
-  create: async (data: CreateProjectorData) => {
-    const response = await api.post<Projector>('/projectors', data);
+  create: async (data: CreateEquipmentData) => {
+    const response = await api.post<Equipment>('/projectors', data);
     return response.data;
   },
 
-  update: async (id: string, data: UpdateProjectorData) => {
-    const response = await api.patch<Projector>(`/projectors/${id}`, data);
+  update: async (id: string, data: UpdateEquipmentData) => {
+    const response = await api.patch<Equipment>(`/projectors/${id}`, data);
     return response.data;
   },
 

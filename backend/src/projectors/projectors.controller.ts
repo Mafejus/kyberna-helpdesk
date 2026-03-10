@@ -7,6 +7,7 @@ import {
   Param,
   Delete,
   UseGuards,
+  Query,
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { ProjectorsService } from './projectors.service';
@@ -15,7 +16,7 @@ import { UpdateProjectorDto } from './dto/update-projector.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
-import { Role } from '@prisma/client';
+import { Role, EquipmentType } from '@prisma/client';
 
 @ApiTags('projectors')
 @ApiBearerAuth()
@@ -26,8 +27,8 @@ export class ProjectorsController {
 
   @Get()
   @Roles(Role.ADMIN, Role.STUDENT)
-  findAll() {
-    return this.projectorsService.findAll();
+  findAll(@Query('type') type?: EquipmentType) {
+    return this.projectorsService.findAll(type);
   }
 
   @Get(':id')

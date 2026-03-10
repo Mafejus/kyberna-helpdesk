@@ -36,7 +36,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     { href: "/dashboard/classrooms", label: "Třídy", icon: GraduationCap, roles: ["STUDENT"] },
     { href: "/dashboard/admin/audit", label: "Audit log", icon: FileText, roles: ["ADMIN"] },
     { href: "/dashboard/admin/attendance", label: "Docházka", icon: ClipboardCheck, roles: ["ADMIN"] },
-    { href: "/dashboard/projectors", label: "Projektory", icon: Projector, roles: ["STUDENT", "ADMIN"] },
+    { href: "/dashboard/projectors", label: "Vybavení", icon: Projector, roles: ["STUDENT", "ADMIN"] },
     { href: "/dashboard/work-orders", label: "Výkazy práce", icon: FileText, roles: ["STUDENT", "ADMIN"] },
     { href: "/dashboard/planning", label: "Plánování", icon: Calendar, roles: ["STUDENT", "ADMIN"] },
     { href: "/dashboard/settings/notifications", label: "Notifikace", icon: Settings, roles: ["STUDENT", "TEACHER", "ADMIN"] },

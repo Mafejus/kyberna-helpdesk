@@ -1,37 +1,55 @@
 import {
   IsBoolean,
   IsDateString,
+  IsEnum,
   IsNotEmpty,
   IsOptional,
   IsString,
 } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { EquipmentType } from '@prisma/client';
 
 export class CreateProjectorDto {
+  @ApiPropertyOptional({ enum: EquipmentType, default: EquipmentType.PROJECTOR })
+  @IsEnum(EquipmentType)
+  @IsOptional()
+  equipmentType?: EquipmentType;
+
   @ApiProperty({ example: '202' })
   @IsString()
   @IsNotEmpty()
   classroom: string;
 
-  @ApiProperty({ example: 'Epson' })
+  @ApiPropertyOptional({ example: 'Epson' })
   @IsString()
-  @IsNotEmpty()
-  brand: string;
-
-  @ApiProperty({ example: 'EB-990U' })
-  @IsString()
-  @IsNotEmpty()
-  model: string;
-
-  @ApiPropertyOptional({ default: false })
-  @IsBoolean()
   @IsOptional()
-  hasDellDock?: boolean;
+  brand?: string;
+
+  @ApiPropertyOptional({ example: 'EB-990U' })
+  @IsString()
+  @IsOptional()
+  model?: string;
 
   @ApiPropertyOptional({ default: true })
   @IsBoolean()
   @IsOptional()
   isFunctional?: boolean;
+
+  @ApiPropertyOptional()
+  @IsDateString()
+  @IsOptional()
+  lastInspectionDate?: string;
+
+  @ApiPropertyOptional()
+  @IsString()
+  @IsOptional()
+  notes?: string;
+
+  // Projector-specific
+  @ApiPropertyOptional({ default: false })
+  @IsBoolean()
+  @IsOptional()
+  hasDellDock?: boolean;
 
   @ApiPropertyOptional({ default: false })
   @IsBoolean()
@@ -53,13 +71,36 @@ export class CreateProjectorDto {
   @IsOptional()
   lampHours?: string;
 
-  @ApiPropertyOptional()
-  @IsDateString()
-  @IsOptional()
-  lastInspectionDate?: string;
-
-  @ApiPropertyOptional()
+  // Hub-specific
+  @ApiPropertyOptional({ example: 'Nový Mikrotik' })
   @IsString()
   @IsOptional()
-  notes?: string;
+  hubType?: string;
+
+  // Audio-specific
+  @ApiPropertyOptional({ example: 'Nedokončené' })
+  @IsString()
+  @IsOptional()
+  audioStatus?: string;
+
+  @ApiPropertyOptional({ example: 'napájecí kabel 2-3 m' })
+  @IsString()
+  @IsOptional()
+  missingItems?: string;
+
+  // AP-specific
+  @ApiPropertyOptional({ example: 'Cisco' })
+  @IsString()
+  @IsOptional()
+  apType?: string;
+
+  @ApiPropertyOptional({ default: false })
+  @IsBoolean()
+  @IsOptional()
+  hasEduroam?: boolean;
+
+  @ApiPropertyOptional({ default: false })
+  @IsBoolean()
+  @IsOptional()
+  hasGuestNetwork?: boolean;
 }
