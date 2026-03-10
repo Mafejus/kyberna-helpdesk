@@ -390,21 +390,44 @@ model PcPropertyValue {
 }
 
 // 6) PROJECTORS & EQUIPMENT
+enum EquipmentType {
+  PROJECTOR
+  AUDIO
+  HUB
+  ACCESS_POINT
+}
+
 model Projector {
-  id                 String    @id @default(uuid())
+  id                 String        @id @default(uuid())
+  equipmentType      EquipmentType @default(PROJECTOR)
   classroom          String
-  hasDellDock        Boolean   @default(false)
-  isFunctional       Boolean   @default(true)
-  hasHdmi            Boolean   @default(false)
-  hasHdmiExtension   Boolean   @default(false)
-  usbExtensionType   String?
-  brand              String
-  model              String
-  lampHours          String?
+  brand              String?
+  model              String?
+  isFunctional       Boolean       @default(true)
   lastInspectionDate DateTime?
   notes              String?
-  createdAt          DateTime  @default(now())
-  updatedAt          DateTime  @updatedAt
+
+  // Projector-specific
+  hasDellDock        Boolean       @default(false)
+  hasHdmi            Boolean       @default(false)
+  hasHdmiExtension   Boolean       @default(false)
+  usbExtensionType   String?
+  lampHours          String?
+
+  // Hub-specific
+  hubType            String?
+
+  // Audio-specific
+  audioStatus        String?
+  missingItems       String?
+
+  // AP-specific
+  apType             String?
+  hasEduroam         Boolean       @default(false)
+  hasGuestNetwork    Boolean       @default(false)
+
+  createdAt          DateTime      @default(now())
+  updatedAt          DateTime      @updatedAt
 }
 
 // 7) WORK ORDERS & SYSTEM SETTINGS
