@@ -7,6 +7,7 @@ import Link from "next/link";
 import { TicketList } from "@/components/dashboard/TicketList";
 import { PlusCircle } from "lucide-react";
 import { DashboardScheduleSection } from "@/components/schedule/DashboardScheduleSection";
+import { NewsBanner } from "@/components/dashboard/NewsBanner";
 
 export default function TeacherDashboard() {
   const [tickets, setTickets] = useState<any[]>([]);
@@ -43,7 +44,9 @@ export default function TeacherDashboard() {
         </Link>
       </div>
 
-      <TicketList 
+      <NewsBanner />
+
+      <TicketList
           tickets={tickets} 
           role="TEACHER" 
           title="Seznam závad"

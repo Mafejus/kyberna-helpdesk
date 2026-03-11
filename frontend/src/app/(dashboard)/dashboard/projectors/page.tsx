@@ -3,9 +3,10 @@
 import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
-import { ProjectorService, Equipment, EquipmentType } from "@/services/projector.service";
+import { ProjectorService, Equipment, EquipmentType, EquipmentPropertyDef } from "@/services/projector.service";
 import { EquipmentTable } from "@/components/projectors/ProjectorsTable";
 import { EquipmentFormDialog } from "@/components/projectors/ProjectorFormDialog";
+import { EquipmentPropertyManager } from "@/components/projectors/EquipmentPropertyManager";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Plus, Loader2 } from "lucide-react";
@@ -31,6 +32,7 @@ export default function EquipmentPage() {
   const router = useRouter();
   const [activeTab, setActiveTab] = useState<EquipmentType>("PROJECTOR");
   const [items, setItems] = useState<Equipment[]>([]);
+  const [properties, setProperties] = useState<EquipmentPropertyDef[]>([]);
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingItem, setEditingItem] = useState<Equipment | null>(null);
@@ -44,11 +46,15 @@ export default function EquipmentPage() {
 
   const canManage = user?.role === "ADMIN" || user?.role === "STUDENT";
 
-  const fetchItems = useCallback(async (type: EquipmentType) => {
+  const fetchData = useCallback(async (type: EquipmentType) => {
     try {
       setLoading(true);
-      const data = await ProjectorService.getAll(type);
-      setItems(data);
+      const [itemsData, propsData] = await Promise.all([
+        ProjectorService.getAll(type),
+        ProjectorService.getProperties(type),
+      ]);
+      setItems(itemsData);
+      setProperties(propsData);
     } catch (err) {
       console.error("Failed to load equipment", err);
     } finally {
@@ -57,8 +63,8 @@ export default function EquipmentPage() {
   }, []);
 
   useEffect(() => {
-    if (canManage) fetchItems(activeTab);
-  }, [activeTab, fetchItems, canManage]);
+    if (canManage) fetchData(activeTab);
+  }, [activeTab, fetchData, canManage]);
 
   const handleTabChange = (value: string) => {
     setActiveTab(value as EquipmentType);
@@ -75,9 +81,52 @@ export default function EquipmentPage() {
     if (!confirm("Opravdu chcete smazat toto vybavení?")) return;
     try {
       await ProjectorService.remove(id);
-      await fetchItems(activeTab);
+      await fetchData(activeTab);
     } catch (err) {
       console.error("Failed to delete equipment", err);
+    }
+  };
+
+  const handleUpdateValue = async (
+    equipmentId: string,
+    propertyId: string,
+    valueBool?: boolean,
+    valueText?: string,
+  ) => {
+    // Optimistic update
+    setItems((prev) =>
+      prev.map((item) => {
+        if (item.id !== equipmentId) return item;
+        const existingIdx = item.propertyValues.findIndex((v) => v.propertyId === propertyId);
+        const newValues = [...item.propertyValues];
+        const prop = properties.find((p) => p.id === propertyId);
+        if (!prop) return item;
+
+        if (existingIdx > -1) {
+          newValues[existingIdx] = {
+            ...newValues[existingIdx],
+            valueBool: valueBool ?? null,
+            valueText: valueText ?? null,
+          };
+        } else {
+          newValues.push({
+            id: "temp",
+            equipmentId,
+            propertyId,
+            valueBool: valueBool ?? null,
+            valueText: valueText ?? null,
+            property: prop,
+          });
+        }
+        return { ...item, propertyValues: newValues };
+      }),
+    );
+
+    try {
+      await ProjectorService.updateValues(equipmentId, [{ propertyId, valueBool, valueText }]);
+    } catch (err) {
+      console.error("Failed to update value", err);
+      fetchData(activeTab); // revert on error
     }
   };
 
@@ -88,7 +137,11 @@ export default function EquipmentPage() {
 
   const handleSaved = () => {
     handleDialogClose();
-    fetchItems(activeTab);
+    fetchData(activeTab);
+  };
+
+  const handlePropertiesChanged = () => {
+    fetchData(activeTab);
   };
 
   // Render nothing while redirecting non-authorized users
@@ -107,9 +160,16 @@ export default function EquipmentPage() {
           <h1 className="text-xl sm:text-2xl font-bold tracking-tight">Vybavení</h1>
           <p className="text-muted-foreground">Evidence školního vybavení</p>
         </div>
-        <Button onClick={() => setDialogOpen(true)} className="w-full sm:w-auto">
-          <Plus className="mr-2 h-4 w-4" /> {ADD_LABELS[activeTab]}
-        </Button>
+        <div className="flex gap-2">
+          <EquipmentPropertyManager
+            equipmentType={activeTab}
+            properties={properties}
+            onChanged={handlePropertiesChanged}
+          />
+          <Button onClick={() => setDialogOpen(true)} className="flex-1 sm:flex-none">
+            <Plus className="mr-2 h-4 w-4" /> {ADD_LABELS[activeTab]}
+          </Button>
+        </div>
       </div>
 
       <Tabs value={activeTab} onValueChange={handleTabChange}>
@@ -132,8 +192,10 @@ export default function EquipmentPage() {
                 items={items}
                 equipmentType={tab.value}
                 canManage={canManage}
+                properties={properties}
                 onEdit={handleEdit}
                 onDelete={handleDelete}
+                onUpdateValue={handleUpdateValue}
               />
             )}
           </TabsContent>

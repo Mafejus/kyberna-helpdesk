@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { Users, BookOpen } from "lucide-react";
 import { DashboardScheduleSection } from "@/components/schedule/DashboardScheduleSection";
+import { NewsBanner } from "@/components/dashboard/NewsBanner";
 
 export default function AdminDashboard() {
   const [stats, setStats] = useState<any>(null);
@@ -29,6 +30,8 @@ export default function AdminDashboard() {
         </div>
       </div>
       
+      <NewsBanner />
+
       {/* Overview Cards */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <Card className="border-l-4 border-l-primary">
