@@ -1,6 +1,25 @@
 import api from '@/lib/api';
 
-export type EquipmentType = 'PROJECTOR' | 'AUDIO' | 'HUB' | 'ACCESS_POINT';
+export type EquipmentType = 'PROJECTOR' | 'AUDIO' | 'HUB' | 'ACCESS_POINT' | 'OTHER';
+export type PropertyType = 'BOOLEAN' | 'TEXT';
+
+export interface EquipmentPropertyDef {
+  id: string;
+  equipmentType: EquipmentType;
+  key: string;
+  label: string;
+  type: PropertyType;
+  order: number;
+}
+
+export interface EquipmentPropertyValue {
+  id: string;
+  equipmentId: string;
+  propertyId: string;
+  valueBool: boolean | null;
+  valueText: string | null;
+  property: EquipmentPropertyDef;
+}
 
 export interface Equipment {
   id: string;
@@ -26,11 +45,13 @@ export interface Equipment {
   apType: string | null;
   hasEduroam: boolean;
   hasGuestNetwork: boolean;
+  // Dynamic properties
+  propertyValues: EquipmentPropertyValue[];
   createdAt: string;
   updatedAt: string;
 }
 
-// Legacy alias for backward compatibility
+// Legacy aliases
 export type Projector = Equipment;
 
 export interface CreateEquipmentData {
@@ -41,18 +62,14 @@ export interface CreateEquipmentData {
   isFunctional?: boolean;
   lastInspectionDate?: string;
   notes?: string;
-  // Projector-specific
   hasDellDock?: boolean;
   hasHdmi?: boolean;
   hasHdmiExtension?: boolean;
   usbExtensionType?: string;
   lampHours?: string;
-  // Hub-specific
   hubType?: string;
-  // Audio-specific
   audioStatus?: string;
   missingItems?: string;
-  // AP-specific
   apType?: string;
   hasEduroam?: boolean;
   hasGuestNetwork?: boolean;
@@ -61,6 +78,20 @@ export interface CreateEquipmentData {
 export type CreateProjectorData = CreateEquipmentData;
 export type UpdateEquipmentData = Partial<CreateEquipmentData>;
 export type UpdateProjectorData = UpdateEquipmentData;
+
+export interface CreatePropertyData {
+  equipmentType: EquipmentType;
+  key: string;
+  label: string;
+  type?: PropertyType;
+  order?: number;
+}
+
+export interface PropertyValueItem {
+  propertyId: string;
+  valueBool?: boolean;
+  valueText?: string;
+}
 
 export const ProjectorService = {
   getAll: async (type?: EquipmentType) => {
@@ -86,6 +117,30 @@ export const ProjectorService = {
 
   remove: async (id: string) => {
     const response = await api.delete(`/projectors/${id}`);
+    return response.data;
+  },
+
+  // Property definitions
+  getProperties: async (type: EquipmentType) => {
+    const response = await api.get<EquipmentPropertyDef[]>('/projectors/property-defs', {
+      params: { type },
+    });
+    return response.data;
+  },
+
+  createProperty: async (data: CreatePropertyData) => {
+    const response = await api.post<EquipmentPropertyDef>('/projectors/property-defs', data);
+    return response.data;
+  },
+
+  deleteProperty: async (id: string) => {
+    const response = await api.delete(`/projectors/property-defs/${id}`);
+    return response.data;
+  },
+
+  // Property values
+  updateValues: async (equipmentId: string, values: PropertyValueItem[]) => {
+    const response = await api.patch(`/projectors/${equipmentId}/values`, { values });
     return response.data;
   },
 };

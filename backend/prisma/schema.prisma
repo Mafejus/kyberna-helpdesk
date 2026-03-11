@@ -395,6 +395,7 @@ enum EquipmentType {
   AUDIO
   HUB
   ACCESS_POINT
+  OTHER
 }
 
 model Projector {
@@ -426,8 +427,38 @@ model Projector {
   hasEduroam         Boolean       @default(false)
   hasGuestNetwork    Boolean       @default(false)
 
+  // Dynamic properties
+  propertyValues     EquipmentPropertyValue[]
+
   createdAt          DateTime      @default(now())
   updatedAt          DateTime      @updatedAt
+}
+
+model EquipmentProperty {
+  id            String        @id @default(uuid())
+  equipmentType EquipmentType
+  key           String
+  label         String
+  type          PropertyType  @default(BOOLEAN)
+  order         Int           @default(0)
+
+  values        EquipmentPropertyValue[]
+
+  @@unique([equipmentType, key])
+}
+
+model EquipmentPropertyValue {
+  id          String   @id @default(uuid())
+  equipmentId String
+  propertyId  String
+
+  valueBool   Boolean?
+  valueText   String?
+
+  equipment   Projector         @relation(fields: [equipmentId], references: [id], onDelete: Cascade)
+  property    EquipmentProperty @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+
+  @@unique([equipmentId, propertyId])
 }
 
 // 7) WORK ORDERS & SYSTEM SETTINGS

@@ -28,6 +28,12 @@ export class StatsController {
     return this.statsService.getAdminOverview();
   }
 
+  @Get('weekly-tickets')
+  @Roles(Role.ADMIN, Role.STUDENT, Role.TEACHER)
+  getWeeklyTickets() {
+    return this.statsService.getWeeklyTickets();
+  }
+
   @Get('leaderboard')
   @Roles(Role.ADMIN, Role.TEACHER, Role.STUDENT)
   getLeaderboard() {

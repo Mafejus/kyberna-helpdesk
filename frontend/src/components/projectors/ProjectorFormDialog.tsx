@@ -33,6 +33,7 @@ const TYPE_LABELS: Record<EquipmentType, string> = {
   HUB: "hub",
   AUDIO: "audio vybavení",
   ACCESS_POINT: "AP",
+  OTHER: "vybavení",
 };
 
 function emptyForm() {
@@ -399,6 +400,48 @@ export function EquipmentFormDialog({
                 <div className="flex items-center justify-between">
                   <Label htmlFor="hasGuestNetwork">Kyberna-host</Label>
                   <Switch id="hasGuestNetwork" checked={form.hasGuestNetwork} onCheckedChange={(v) => set("hasGuestNetwork", v)} />
+                </div>
+              </div>
+            </>
+          )}
+
+          {/* OTHER fields */}
+          {equipmentType === "OTHER" && (
+            <>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="brand">Název / Typ *</Label>
+                  <Input
+                    id="brand"
+                    value={form.brand}
+                    onChange={(e) => set("brand", e.target.value)}
+                    placeholder="např. Nabíječka, Kabel, Adaptér"
+                    required
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="model">Model / Specifikace</Label>
+                  <Input
+                    id="model"
+                    value={form.model}
+                    onChange={(e) => set("model", e.target.value)}
+                    placeholder="např. USB-C 65W"
+                  />
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="lastInspectionDate">Datum kontroly</Label>
+                  <Input
+                    id="lastInspectionDate"
+                    type="date"
+                    value={form.lastInspectionDate}
+                    onChange={(e) => set("lastInspectionDate", e.target.value)}
+                  />
+                </div>
+                <div className="flex items-center gap-3 pt-6">
+                  <Label htmlFor="isFunctional">Funkční</Label>
+                  <Switch id="isFunctional" checked={form.isFunctional} onCheckedChange={(v) => set("isFunctional", v)} />
                 </div>
               </div>
             </>

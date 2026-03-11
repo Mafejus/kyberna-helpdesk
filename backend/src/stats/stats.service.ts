@@ -111,6 +111,20 @@ export class StatsService {
     }).filter(item => item.user); // Only return active users who were found in the isActive: true fetch
   }
 
+  async getWeeklyTickets() {
+    const now = new Date();
+    const dayOfWeek = now.getDay(); // 0=Sun,1=Mon,...
+    const diffToMonday = dayOfWeek === 0 ? 6 : dayOfWeek - 1;
+    const monday = new Date(now);
+    monday.setDate(now.getDate() - diffToMonday);
+    monday.setHours(0, 0, 0, 0);
+
+    const count = await this.prisma.ticket.count({
+      where: { createdAt: { gte: monday } },
+    });
+    return { count, since: monday.toISOString() };
+  }
+
   async getAdminLeaderboard() {
     // Restore Ticket Leaderboard for existing widget
     // Aggregate points for all students based on UserScore
