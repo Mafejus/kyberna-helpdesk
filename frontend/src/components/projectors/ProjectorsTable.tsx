@@ -191,9 +191,7 @@ function HubRows({ items, canManage, properties, onEdit, onDelete, onUpdateValue
       <TableHeader>
         <TableRow>
           <TableHead>Učebna</TableHead>
-          <TableHead>Typ hubu</TableHead>
-          <TableHead>Značka / Model</TableHead>
-          <TableHead className="text-center">Funkčnost</TableHead>
+          <TableHead className="text-center">Je / Není</TableHead>
           <TableHead>Poslední kontrola</TableHead>
           <TableHead>Poznámky</TableHead>
           {properties.map((p) => (
@@ -206,12 +204,6 @@ function HubRows({ items, canManage, properties, onEdit, onDelete, onUpdateValue
         {items.map((p) => (
           <ClickableRow key={p.id} item={p} canManage={canManage} onEdit={onEdit}>
             <TableCell className="font-medium">{p.classroom}</TableCell>
-            <TableCell>{p.hubType || E}</TableCell>
-            <TableCell>
-              {p.brand || p.model
-                ? <><span className="font-medium">{p.brand || ""}</span>{" "}<span className="text-muted-foreground">{p.model || ""}</span></>
-                : E}
-            </TableCell>
             <TableCell className="text-center"><div className="flex justify-center"><BoolIcon value={p.isFunctional} /></div></TableCell>
             <TableCell>{formatDate(p.lastInspectionDate)}</TableCell>
             <TableCell className="max-w-[200px] truncate text-sm text-muted-foreground" title={p.notes || ""}>{p.notes || E}</TableCell>
