@@ -44,7 +44,7 @@ export class PowerSocketService {
     });
   }
 
-  async updateSocket(socketId: string, data: { isWorking?: boolean; note?: string; number?: number }) {
+  async updateSocket(socketId: string, data: { isWorking?: boolean; hasProblem?: boolean; note?: string; number?: number }) {
     return this.prisma.powerSocket.update({
       where: { id: socketId },
       data,

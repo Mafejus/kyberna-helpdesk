@@ -396,6 +396,7 @@ model PowerSocket {
   id          String   @id @default(uuid())
   number      Int
   isWorking   Boolean  @default(true)
+  hasProblem  Boolean  @default(false)
   note        String?
   classroomId String
 
