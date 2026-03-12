@@ -88,6 +88,7 @@ model Classroom {
   tickets      Ticket[]
   classroomPcs ClassroomPc[] 
   pcProperties PcProperty[]
+  powerSockets PowerSocket[]
 }
 
 model Ticket {
@@ -389,7 +390,20 @@ model PcPropertyValue {
   @@unique([pcId, propertyId])
 }
 
-// 6) PROJECTORS & EQUIPMENT
+// 6) POWER SOCKETS
+model PowerSocket {
+  id          String   @id @default(uuid())
+  number      Int
+  isWorking   Boolean  @default(true)
+  note        String?
+  classroomId String
+
+  classroom   Classroom @relation(fields: [classroomId], references: [id], onDelete: Cascade)
+
+  @@index([classroomId, number])
+}
+
+// 7) PROJECTORS & EQUIPMENT
 enum EquipmentType {
   PROJECTOR
   AUDIO

@@ -10,6 +10,7 @@ import { ArrowLeft } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { PcList } from "@/components/classrooms/PcList";
+import { SocketList } from "@/components/classrooms/SocketList";
 
 export default function ClassroomDetail() {
   const { id } = useParams();
@@ -86,6 +87,7 @@ export default function ClassroomDetail() {
         <TabsList>
             <TabsTrigger value="tickets">Tickety</TabsTrigger>
             <TabsTrigger value="pcs">PC</TabsTrigger>
+            <TabsTrigger value="sockets">Zásuvky</TabsTrigger>
         </TabsList>
         <TabsContent value="tickets">
             <TicketList 
@@ -97,6 +99,9 @@ export default function ClassroomDetail() {
         </TabsContent>
         <TabsContent value="pcs">
             <PcList classroomId={id as string} role={role as any} />
+        </TabsContent>
+        <TabsContent value="sockets">
+            <SocketList classroomId={id as string} />
         </TabsContent>
       </Tabs>
     </div>

@@ -12,6 +12,7 @@ import { AuditModule } from './audit/audit.module';
 import { NotificationsModule } from './notifications/notifications.module';
 import { NotificationPreferencesModule } from './notification-preferences/notification-preferences.module';
 import { ClassroomPcModule } from './classrooms/classroom-pc/classroom-pc.module';
+import { PowerSocketModule } from './classrooms/power-socket/power-socket.module';
 import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
 import { APP_GUARD } from '@nestjs/core';
 
@@ -43,6 +44,7 @@ import { WorkOrdersModule } from './work-orders/work-orders.module';
     NotificationsModule,
     NotificationPreferencesModule,
     ClassroomPcModule,
+    PowerSocketModule,
     AttendanceModule,
     ProjectorsModule,
     ScheduleModule.forRoot(),
