@@ -88,6 +88,7 @@ model Classroom {
   tickets      Ticket[]
   classroomPcs ClassroomPc[] 
   pcProperties PcProperty[]
+  powerSockets PowerSocket[]
 }
 
 model Ticket {
@@ -389,7 +390,20 @@ model PcPropertyValue {
   @@unique([pcId, propertyId])
 }
 
-// 6) PROJECTORS & EQUIPMENT
+// 6) POWER SOCKETS
+model PowerSocket {
+  id          String   @id @default(uuid())
+  number      Int
+  isWorking   Boolean  @default(true)
+  note        String?
+  classroomId String
+
+  classroom   Classroom @relation(fields: [classroomId], references: [id], onDelete: Cascade)
+
+  @@index([classroomId, number])
+}
+
+// 7) PROJECTORS & EQUIPMENT
 enum EquipmentType {
   PROJECTOR
   AUDIO
@@ -427,8 +441,37 @@ model Projector {
   hasEduroam         Boolean       @default(false)
   hasGuestNetwork    Boolean       @default(false)
 
+  propertyValues     EquipmentPropertyValue[]
+
   createdAt          DateTime      @default(now())
   updatedAt          DateTime      @updatedAt
+}
+
+model EquipmentProperty {
+  id            String        @id @default(uuid())
+  equipmentType EquipmentType
+  key           String
+  label         String
+  type          PropertyType  @default(BOOLEAN)
+  order         Int           @default(0)
+
+  values        EquipmentPropertyValue[]
+
+  @@unique([equipmentType, key])
+}
+
+model EquipmentPropertyValue {
+  id          String   @id @default(uuid())
+  equipmentId String
+  propertyId  String
+
+  valueBool   Boolean?
+  valueText   String?
+
+  equipment   Projector         @relation(fields: [equipmentId], references: [id], onDelete: Cascade)
+  property    EquipmentProperty @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+
+  @@unique([equipmentId, propertyId])
 }
 
 // 7) WORK ORDERS & SYSTEM SETTINGS
