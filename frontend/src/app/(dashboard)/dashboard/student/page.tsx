@@ -11,6 +11,7 @@ import { TicketList } from "@/components/dashboard/TicketList";
 import { BookOpen } from "lucide-react";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { DashboardScheduleSection } from "@/components/schedule/DashboardScheduleSection";
+import { NewsBanner } from "@/components/dashboard/NewsBanner";
 import Link from "next/link";
 
 
@@ -61,6 +62,8 @@ export default function StudentDashboard() {
             <Button className="w-full sm:w-auto">Nahlásit problém</Button>
         </Link>
       </div>
+
+      <NewsBanner />
 
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <Card className="border-l-4 border-l-primary">

@@ -1,6 +1,6 @@
 "use client";
 
-import { Equipment, EquipmentType } from "@/services/projector.service";
+import { Equipment, EquipmentType, EquipmentPropertyDef } from "@/services/projector.service";
 import {
   Table,
   TableBody,
@@ -10,14 +10,17 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { Check, X, Pencil, Trash2 } from "lucide-react";
 
 interface EquipmentTableProps {
   items: Equipment[];
   equipmentType: EquipmentType;
   canManage: boolean;
+  properties: EquipmentPropertyDef[];
   onEdit: (item: Equipment) => void;
   onDelete: (id: string) => void;
+  onUpdateValue: (equipmentId: string, propertyId: string, valueBool?: boolean, valueText?: string) => void;
 }
 
 function BoolIcon({ value }: { value: boolean }) {
@@ -38,6 +41,45 @@ function formatDate(dateStr: string | null): string {
 }
 
 const E = "—";
+
+function DynamicCell({
+  item,
+  property,
+  onUpdateValue,
+}: {
+  item: Equipment;
+  property: EquipmentPropertyDef;
+  onUpdateValue: (equipmentId: string, propertyId: string, valueBool?: boolean, valueText?: string) => void;
+}) {
+  const val = item.propertyValues?.find((v) => v.propertyId === property.id);
+
+  if (property.type === "BOOLEAN") {
+    const boolVal = val?.valueBool ?? false;
+    return (
+      <TableCell
+        className="text-center"
+        onClick={(e) => {
+          e.stopPropagation();
+          onUpdateValue(item.id, property.id, !boolVal);
+        }}
+      >
+        <div className="flex justify-center cursor-pointer">
+          {boolVal ? (
+            <Badge className="bg-green-600 hover:bg-green-700">Ano</Badge>
+          ) : (
+            <Badge variant="outline" className="text-muted-foreground hover:bg-muted">Ne</Badge>
+          )}
+        </div>
+      </TableCell>
+    );
+  }
+
+  return (
+    <TableCell className="text-sm text-muted-foreground" onClick={(e) => e.stopPropagation()}>
+      {val?.valueText || E}
+    </TableCell>
+  );
+}
 
 function ActionCell({
   item,
@@ -93,7 +135,9 @@ function ClickableRow({
   );
 }
 
-function ProjectorRows({ items, canManage, onEdit, onDelete }: Omit<EquipmentTableProps, "equipmentType">) {
+type RowProps = Omit<EquipmentTableProps, "equipmentType" | "items"> & { items: Equipment[] };
+
+function ProjectorRows({ items, canManage, properties, onEdit, onDelete, onUpdateValue }: RowProps) {
   return (
     <>
       <TableHeader>
@@ -108,6 +152,9 @@ function ProjectorRows({ items, canManage, onEdit, onDelete }: Omit<EquipmentTab
           <TableHead>USB prodl.</TableHead>
           <TableHead>Poslední kontrola</TableHead>
           <TableHead>Poznámky</TableHead>
+          {properties.map((p) => (
+            <TableHead key={p.id} className="text-center">{p.label}</TableHead>
+          ))}
           {canManage && <TableHead className="text-right">Akce</TableHead>}
         </TableRow>
       </TableHeader>
@@ -127,6 +174,9 @@ function ProjectorRows({ items, canManage, onEdit, onDelete }: Omit<EquipmentTab
             <TableCell>{p.usbExtensionType || E}</TableCell>
             <TableCell>{formatDate(p.lastInspectionDate)}</TableCell>
             <TableCell className="max-w-[200px] truncate text-sm text-muted-foreground" title={p.notes || ""}>{p.notes || E}</TableCell>
+            {properties.map((prop) => (
+              <DynamicCell key={prop.id} item={p} property={prop} onUpdateValue={onUpdateValue} />
+            ))}
             <ActionCell item={p} canManage={canManage} onEdit={onEdit} onDelete={onDelete} />
           </ClickableRow>
         ))}
@@ -135,17 +185,18 @@ function ProjectorRows({ items, canManage, onEdit, onDelete }: Omit<EquipmentTab
   );
 }
 
-function HubRows({ items, canManage, onEdit, onDelete }: Omit<EquipmentTableProps, "equipmentType">) {
+function HubRows({ items, canManage, properties, onEdit, onDelete, onUpdateValue }: RowProps) {
   return (
     <>
       <TableHeader>
         <TableRow>
           <TableHead>Učebna</TableHead>
-          <TableHead>Typ hubu</TableHead>
-          <TableHead>Značka / Model</TableHead>
-          <TableHead className="text-center">Funkčnost</TableHead>
+          <TableHead className="text-center">Je / Není</TableHead>
           <TableHead>Poslední kontrola</TableHead>
           <TableHead>Poznámky</TableHead>
+          {properties.map((p) => (
+            <TableHead key={p.id} className="text-center">{p.label}</TableHead>
+          ))}
           {canManage && <TableHead className="text-right">Akce</TableHead>}
         </TableRow>
       </TableHeader>
@@ -153,15 +204,12 @@ function HubRows({ items, canManage, onEdit, onDelete }: Omit<EquipmentTableProp
         {items.map((p) => (
           <ClickableRow key={p.id} item={p} canManage={canManage} onEdit={onEdit}>
             <TableCell className="font-medium">{p.classroom}</TableCell>
-            <TableCell>{p.hubType || E}</TableCell>
-            <TableCell>
-              {p.brand || p.model
-                ? <><span className="font-medium">{p.brand || ""}</span>{" "}<span className="text-muted-foreground">{p.model || ""}</span></>
-                : E}
-            </TableCell>
             <TableCell className="text-center"><div className="flex justify-center"><BoolIcon value={p.isFunctional} /></div></TableCell>
             <TableCell>{formatDate(p.lastInspectionDate)}</TableCell>
             <TableCell className="max-w-[200px] truncate text-sm text-muted-foreground" title={p.notes || ""}>{p.notes || E}</TableCell>
+            {properties.map((prop) => (
+              <DynamicCell key={prop.id} item={p} property={prop} onUpdateValue={onUpdateValue} />
+            ))}
             <ActionCell item={p} canManage={canManage} onEdit={onEdit} onDelete={onDelete} />
           </ClickableRow>
         ))}
@@ -170,7 +218,7 @@ function HubRows({ items, canManage, onEdit, onDelete }: Omit<EquipmentTableProp
   );
 }
 
-function AudioRows({ items, canManage, onEdit, onDelete }: Omit<EquipmentTableProps, "equipmentType">) {
+function AudioRows({ items, canManage, properties, onEdit, onDelete, onUpdateValue }: RowProps) {
   return (
     <>
       <TableHeader>
@@ -182,6 +230,9 @@ function AudioRows({ items, canManage, onEdit, onDelete }: Omit<EquipmentTablePr
           <TableHead className="text-center">Funkčnost</TableHead>
           <TableHead>Poslední kontrola</TableHead>
           <TableHead>Poznámky</TableHead>
+          {properties.map((p) => (
+            <TableHead key={p.id} className="text-center">{p.label}</TableHead>
+          ))}
           {canManage && <TableHead className="text-right">Akce</TableHead>}
         </TableRow>
       </TableHeader>
@@ -207,6 +258,9 @@ function AudioRows({ items, canManage, onEdit, onDelete }: Omit<EquipmentTablePr
             <TableCell className="text-center"><div className="flex justify-center"><BoolIcon value={p.isFunctional} /></div></TableCell>
             <TableCell>{formatDate(p.lastInspectionDate)}</TableCell>
             <TableCell className="max-w-[200px] truncate text-sm text-muted-foreground" title={p.notes || ""}>{p.notes || E}</TableCell>
+            {properties.map((prop) => (
+              <DynamicCell key={prop.id} item={p} property={prop} onUpdateValue={onUpdateValue} />
+            ))}
             <ActionCell item={p} canManage={canManage} onEdit={onEdit} onDelete={onDelete} />
           </ClickableRow>
         ))}
@@ -215,7 +269,7 @@ function AudioRows({ items, canManage, onEdit, onDelete }: Omit<EquipmentTablePr
   );
 }
 
-function AccessPointRows({ items, canManage, onEdit, onDelete }: Omit<EquipmentTableProps, "equipmentType">) {
+function AccessPointRows({ items, canManage, properties, onEdit, onDelete, onUpdateValue }: RowProps) {
   return (
     <>
       <TableHeader>
@@ -228,6 +282,9 @@ function AccessPointRows({ items, canManage, onEdit, onDelete }: Omit<EquipmentT
           <TableHead className="text-center">Funkčnost</TableHead>
           <TableHead>Poslední kontrola</TableHead>
           <TableHead>Poznámky</TableHead>
+          {properties.map((p) => (
+            <TableHead key={p.id} className="text-center">{p.label}</TableHead>
+          ))}
           {canManage && <TableHead className="text-right">Akce</TableHead>}
         </TableRow>
       </TableHeader>
@@ -242,6 +299,9 @@ function AccessPointRows({ items, canManage, onEdit, onDelete }: Omit<EquipmentT
             <TableCell className="text-center"><div className="flex justify-center"><BoolIcon value={p.isFunctional} /></div></TableCell>
             <TableCell>{formatDate(p.lastInspectionDate)}</TableCell>
             <TableCell className="max-w-[200px] truncate text-sm text-muted-foreground" title={p.notes || ""}>{p.notes || E}</TableCell>
+            {properties.map((prop) => (
+              <DynamicCell key={prop.id} item={p} property={prop} onUpdateValue={onUpdateValue} />
+            ))}
             <ActionCell item={p} canManage={canManage} onEdit={onEdit} onDelete={onDelete} />
           </ClickableRow>
         ))}
@@ -250,7 +310,7 @@ function AccessPointRows({ items, canManage, onEdit, onDelete }: Omit<EquipmentT
   );
 }
 
-function OtherRows({ items, canManage, onEdit, onDelete }: Omit<EquipmentTableProps, "equipmentType">) {
+function OtherRows({ items, canManage, properties, onEdit, onDelete, onUpdateValue }: RowProps) {
   return (
     <>
       <TableHeader>
@@ -261,6 +321,9 @@ function OtherRows({ items, canManage, onEdit, onDelete }: Omit<EquipmentTablePr
           <TableHead className="text-center">Funkčnost</TableHead>
           <TableHead>Poslední kontrola</TableHead>
           <TableHead>Poznámky</TableHead>
+          {properties.map((p) => (
+            <TableHead key={p.id} className="text-center">{p.label}</TableHead>
+          ))}
           {canManage && <TableHead className="text-right">Akce</TableHead>}
         </TableRow>
       </TableHeader>
@@ -277,6 +340,9 @@ function OtherRows({ items, canManage, onEdit, onDelete }: Omit<EquipmentTablePr
             <TableCell className="text-center"><div className="flex justify-center"><BoolIcon value={p.isFunctional} /></div></TableCell>
             <TableCell>{formatDate(p.lastInspectionDate)}</TableCell>
             <TableCell className="max-w-[200px] truncate text-sm text-muted-foreground" title={p.notes || ""}>{p.notes || E}</TableCell>
+            {properties.map((prop) => (
+              <DynamicCell key={prop.id} item={p} property={prop} onUpdateValue={onUpdateValue} />
+            ))}
             <ActionCell item={p} canManage={canManage} onEdit={onEdit} onDelete={onDelete} />
           </ClickableRow>
         ))}
@@ -293,7 +359,7 @@ const EMPTY_TEXT: Record<EquipmentType, string> = {
   OTHER: "Žádné ostatní vybavení k zobrazení.",
 };
 
-export function EquipmentTable({ items, equipmentType, canManage, onEdit, onDelete }: EquipmentTableProps) {
+export function EquipmentTable({ items, equipmentType, canManage, properties, onEdit, onDelete, onUpdateValue }: EquipmentTableProps) {
   if (items.length === 0) {
     return (
       <div className="rounded-lg border border-dashed p-8 text-center text-muted-foreground">
@@ -302,14 +368,16 @@ export function EquipmentTable({ items, equipmentType, canManage, onEdit, onDele
     );
   }
 
+  const rowProps: RowProps = { items, canManage, properties, onEdit, onDelete, onUpdateValue };
+
   return (
     <div className="rounded-md border overflow-x-auto">
       <Table className="min-w-[700px]">
-        {equipmentType === "PROJECTOR" && <ProjectorRows items={items} canManage={canManage} onEdit={onEdit} onDelete={onDelete} />}
-        {equipmentType === "HUB" && <HubRows items={items} canManage={canManage} onEdit={onEdit} onDelete={onDelete} />}
-        {equipmentType === "AUDIO" && <AudioRows items={items} canManage={canManage} onEdit={onEdit} onDelete={onDelete} />}
-        {equipmentType === "ACCESS_POINT" && <AccessPointRows items={items} canManage={canManage} onEdit={onEdit} onDelete={onDelete} />}
-        {equipmentType === "OTHER" && <OtherRows items={items} canManage={canManage} onEdit={onEdit} onDelete={onDelete} />}
+        {equipmentType === "PROJECTOR" && <ProjectorRows {...rowProps} />}
+        {equipmentType === "HUB" && <HubRows {...rowProps} />}
+        {equipmentType === "AUDIO" && <AudioRows {...rowProps} />}
+        {equipmentType === "ACCESS_POINT" && <AccessPointRows {...rowProps} />}
+        {equipmentType === "OTHER" && <OtherRows {...rowProps} />}
       </Table>
     </div>
   );

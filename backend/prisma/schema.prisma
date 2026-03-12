@@ -441,6 +441,7 @@ model Projector {
   hasEduroam         Boolean       @default(false)
   hasGuestNetwork    Boolean       @default(false)
 
+  // Dynamic properties
   propertyValues     EquipmentPropertyValue[]
 
   createdAt          DateTime      @default(now())
