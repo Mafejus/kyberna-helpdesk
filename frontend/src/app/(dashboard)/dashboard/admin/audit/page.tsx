@@ -16,12 +16,14 @@ export default function AdminAuditPage() {
   const [entityType, setEntityType] = useState<string>("ALL");
   const [entityId, setEntityId] = useState("");
   const [userId, setUserId] = useState("");
+  const [search, setSearch] = useState("");
 
   // Prepare filters object for the hook
   const filters = {
       entityType: entityType !== 'ALL' ? entityType : undefined,
       entityId: entityId.trim() || undefined,
-      userId: userId.trim() || undefined
+      userId: userId.trim() || undefined,
+      search: search.trim() || undefined
   };
 
   // Debounce could be useful here but for now relying on user clicking "Search" 
@@ -36,7 +38,8 @@ export default function AdminAuditPage() {
     setActiveFilters({
         entityType: entityType !== 'ALL' ? entityType : undefined,
         entityId: entityId.trim() || undefined,
-        userId: userId.trim() || undefined
+        userId: userId.trim() || undefined,
+        search: search.trim() || undefined
     });
   };
 
@@ -59,7 +62,7 @@ export default function AdminAuditPage() {
              <Filter className="h-4 w-4"/> Filtry
           </CardTitle>
         </CardHeader>
-        <CardContent className="grid gap-4 grid-cols-1 sm:grid-cols-2 md:grid-cols-4 items-end">
+        <CardContent className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 items-end">
           <div className="space-y-2">
              <span className="text-sm font-medium">Typ entity</span>
              <Select value={entityType} onValueChange={setEntityType}>
@@ -82,6 +85,10 @@ export default function AdminAuditPage() {
           <div className="space-y-2">
              <span className="text-sm font-medium">ID Uživatele</span>
              <Input placeholder="UUID..." value={userId} onChange={e => setUserId(e.target.value)} />
+          </div>
+          <div className="space-y-2">
+             <span className="text-sm font-medium">Hledat (Text / Aktér)</span>
+             <Input placeholder="např. socket c 27..." value={search} onChange={e => setSearch(e.target.value)} />
           </div>
           <Button onClick={handleSearch} disabled={loading}>
              {loading && !nextCursor ? <Loader2 className="h-4 w-4 animate-spin mr-2"/> : <Search className="h-4 w-4 mr-2"/>}

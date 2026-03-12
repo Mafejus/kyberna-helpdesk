@@ -1,9 +1,14 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
+import { AuditAction, AuditEntityType, User } from '@prisma/client';
+import { AuditService } from '../../audit/audit.service';
 
 @Injectable()
 export class PowerSocketService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private auditService: AuditService,
+  ) {}
 
   // ---- Sockets ----
 
@@ -15,7 +20,7 @@ export class PowerSocketService {
     });
   }
 
-  async generateSockets(classroomId: string) {
+  async generateSockets(classroomId: string, user: User) {
     const count = await this.prisma.powerSocket.count({ where: { classroomId } });
     if (count > 0) return { message: 'Sockets already exist', count };
 
@@ -26,10 +31,21 @@ export class PowerSocketService {
     }));
 
     await this.prisma.powerSocket.createMany({ data });
+
+    await this.auditService.log({
+      actorUserId: user.id,
+      actorRole: user.role,
+      actorName: user.fullName,
+      entityType: AuditEntityType.POWER_SOCKET,
+      entityId: classroomId,
+      action: AuditAction.SOCKET_GENERATED,
+      message: `Generated 50 power sockets for classroom ${classroomId}`,
+    });
+
     return { message: 'Generated 50 power sockets' };
   }
 
-  async createSocket(classroomId: string, data: { number?: number; note?: string }) {
+  async createSocket(classroomId: string, user: User, data: { number?: number; note?: string }) {
     // Auto-pick next number if not provided
     if (!data.number) {
       const last = await this.prisma.powerSocket.findFirst({
@@ -38,22 +54,63 @@ export class PowerSocketService {
       });
       data.number = (last?.number ?? 0) + 1;
     }
-    return this.prisma.powerSocket.create({
+    const socket = await this.prisma.powerSocket.create({
       data: { classroomId, number: data.number, isWorking: true, note: data.note },
       include: { values: true },
     });
+
+    await this.auditService.log({
+      actorUserId: user.id,
+      actorRole: user.role,
+      actorName: user.fullName,
+      entityType: AuditEntityType.POWER_SOCKET,
+      entityId: socket.id,
+      action: AuditAction.SOCKET_CREATED,
+      message: `Created power socket #${socket.number} in classroom ${classroomId}`,
+      after: { number: socket.number, note: socket.note },
+    });
+
+    return socket;
   }
 
-  async updateSocket(socketId: string, data: { isWorking?: boolean; hasProblem?: boolean; note?: string; number?: number }) {
-    return this.prisma.powerSocket.update({
+  async updateSocket(socketId: string, user: User, data: { isWorking?: boolean; hasProblem?: boolean; note?: string; number?: number }) {
+    const before = await this.prisma.powerSocket.findUnique({ where: { id: socketId } });
+    const socket = await this.prisma.powerSocket.update({
       where: { id: socketId },
       data,
       include: { values: true },
     });
+
+    await this.auditService.log({
+      actorUserId: user.id,
+      actorRole: user.role,
+      actorName: user.fullName,
+      entityType: AuditEntityType.POWER_SOCKET,
+      entityId: socket.id,
+      action: AuditAction.SOCKET_UPDATED,
+      message: `Updated power socket #${socket.number}`,
+      before,
+      after: data,
+    });
+
+    return socket;
   }
 
-  async deleteSocket(socketId: string) {
-    return this.prisma.powerSocket.delete({ where: { id: socketId } });
+  async deleteSocket(socketId: string, user: User) {
+    const socket = await this.prisma.powerSocket.delete({ where: { id: socketId } });
+
+    await this.auditService.log({
+      actorUserId: user.id,
+      actorRole: user.role,
+      actorName: user.fullName,
+      entityType: AuditEntityType.POWER_SOCKET,
+      entityId: socketId,
+      action: AuditAction.SOCKET_DELETED,
+      message: `Deleted power socket #${socket.number}`,
+      before: socket,
+    });
+
+    return socket;
   }
 
   // ---- Properties ----
@@ -65,12 +122,37 @@ export class PowerSocketService {
     });
   }
 
-  async createProperty(classroomId: string, data: { key: string; label: string; type: 'BOOLEAN' | 'TEXT'; order?: number }) {
-    return this.prisma.socketProperty.create({ data: { ...data, classroomId } });
+  async createProperty(classroomId: string, user: User, data: { key: string; label: string; type: 'BOOLEAN' | 'TEXT'; order?: number }) {
+    const prop = await this.prisma.socketProperty.create({ data: { ...data, classroomId } });
+    
+    await this.auditService.log({
+      actorUserId: user.id,
+      actorRole: user.role,
+      actorName: user.fullName,
+      entityType: AuditEntityType.POWER_SOCKET,
+      entityId: prop.id,
+      action: AuditAction.PROPERTY_CREATED,
+      message: `Created socket property ${prop.label} (${prop.key}) in classroom ${classroomId}`,
+    });
+
+    return prop;
   }
 
-  async deleteProperty(id: string) {
-    return this.prisma.socketProperty.delete({ where: { id } });
+  async deleteProperty(id: string, user: User) {
+    const prop = await this.prisma.socketProperty.delete({ where: { id } });
+
+    await this.auditService.log({
+      actorUserId: user.id,
+      actorRole: user.role,
+      actorName: user.fullName,
+      entityType: AuditEntityType.POWER_SOCKET,
+      entityId: id,
+      action: AuditAction.PROPERTY_DELETED,
+      message: `Deleted socket property ${prop.label}`,
+      before: prop,
+    });
+
+    return prop;
   }
 
   async reorderProperties(items: { id: string; order: number }[]) {
@@ -83,8 +165,9 @@ export class PowerSocketService {
 
   // ---- Property Values ----
 
-  async updateValues(socketId: string, values: { propertyId: string; valueBool?: boolean; valueText?: string }[]) {
-    return Promise.all(
+  async updateValues(socketId: string, user: User, values: { propertyId: string; valueBool?: boolean; valueText?: string }[]) {
+    const socket = await this.prisma.powerSocket.findUnique({ where: { id: socketId } });
+    const results = await Promise.all(
       values.map((v) =>
         this.prisma.socketPropertyValue.upsert({
           where: { socketId_propertyId: { socketId, propertyId: v.propertyId } },
@@ -93,5 +176,18 @@ export class PowerSocketService {
         }),
       ),
     );
+
+    await this.auditService.log({
+      actorUserId: user.id,
+      actorRole: user.role,
+      actorName: user.fullName,
+      entityType: AuditEntityType.POWER_SOCKET,
+      entityId: socketId,
+      action: AuditAction.SOCKET_UPDATED,
+      message: `Updated custom values for power socket #${socket?.number}`,
+      after: values,
+    });
+
+    return results;
   }
 }

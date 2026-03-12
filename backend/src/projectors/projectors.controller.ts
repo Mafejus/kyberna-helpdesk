@@ -8,6 +8,7 @@ import {
   Delete,
   UseGuards,
   Query,
+  Request,
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { ProjectorsService } from './projectors.service';
@@ -37,14 +38,14 @@ export class ProjectorsController {
 
   @Post('property-defs')
   @Roles(Role.ADMIN, Role.STUDENT)
-  createProperty(@Body() dto: CreateEquipmentPropertyDto) {
-    return this.projectorsService.createProperty(dto);
+  createProperty(@Body() dto: CreateEquipmentPropertyDto, @Request() req) {
+    return this.projectorsService.createProperty(dto, req.user);
   }
 
   @Delete('property-defs/:id')
   @Roles(Role.ADMIN, Role.STUDENT)
-  deleteProperty(@Param('id') id: string) {
-    return this.projectorsService.deleteProperty(id);
+  deleteProperty(@Param('id') id: string, @Request() req) {
+    return this.projectorsService.deleteProperty(id, req.user);
   }
 
   // ── Equipment CRUD ────────────────────────────────────────────────────────
@@ -63,27 +64,27 @@ export class ProjectorsController {
 
   @Post()
   @Roles(Role.ADMIN, Role.STUDENT)
-  create(@Body() createProjectorDto: CreateProjectorDto) {
-    return this.projectorsService.create(createProjectorDto);
+  create(@Body() createProjectorDto: CreateProjectorDto, @Request() req) {
+    return this.projectorsService.create(createProjectorDto, req.user);
   }
 
   @Patch(':id')
   @Roles(Role.ADMIN, Role.STUDENT)
-  update(@Param('id') id: string, @Body() updateProjectorDto: UpdateProjectorDto) {
-    return this.projectorsService.update(id, updateProjectorDto);
+  update(@Param('id') id: string, @Body() updateProjectorDto: UpdateProjectorDto, @Request() req) {
+    return this.projectorsService.update(id, updateProjectorDto, req.user);
   }
 
   @Delete(':id')
   @Roles(Role.ADMIN, Role.STUDENT)
-  remove(@Param('id') id: string) {
-    return this.projectorsService.remove(id);
+  remove(@Param('id') id: string, @Request() req) {
+    return this.projectorsService.remove(id, req.user);
   }
 
   // ── Property values ───────────────────────────────────────────────────────
 
   @Patch(':id/values')
   @Roles(Role.ADMIN, Role.STUDENT)
-  updateValues(@Param('id') id: string, @Body() dto: UpdateEquipmentValuesDto) {
-    return this.projectorsService.updateValues(id, dto);
+  updateValues(@Param('id') id: string, @Body() dto: UpdateEquipmentValuesDto, @Request() req) {
+    return this.projectorsService.updateValues(id, dto, req.user);
   }
 }

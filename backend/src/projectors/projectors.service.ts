@@ -4,7 +4,8 @@ import { CreateProjectorDto } from './dto/create-projector.dto';
 import { UpdateProjectorDto } from './dto/update-projector.dto';
 import { CreateEquipmentPropertyDto } from './dto/create-equipment-property.dto';
 import { UpdateEquipmentValuesDto } from './dto/update-equipment-values.dto';
-import { EquipmentType } from '@prisma/client';
+import { AuditAction, AuditEntityType, EquipmentType, User } from '@prisma/client';
+import { AuditService } from '../audit/audit.service';
 
 const PROPERTY_VALUES_INCLUDE = {
   propertyValues: {
@@ -15,7 +16,10 @@ const PROPERTY_VALUES_INCLUDE = {
 
 @Injectable()
 export class ProjectorsService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly auditService: AuditService,
+  ) {}
 
   findAll(type?: EquipmentType) {
     return this.prisma.projector.findMany({
@@ -34,21 +38,36 @@ export class ProjectorsService {
     return projector;
   }
 
-  create(dto: CreateProjectorDto) {
-    return this.prisma.projector.create({
-      data: {
-        ...dto,
-        lastInspectionDate: dto.lastInspectionDate
-          ? new Date(dto.lastInspectionDate)
-          : undefined,
-      },
-      include: PROPERTY_VALUES_INCLUDE,
+  create(dto: CreateProjectorDto, user: User) {
+    return this.prisma.$transaction(async (tx) => {
+      const projector = await tx.projector.create({
+        data: {
+          ...dto,
+          lastInspectionDate: dto.lastInspectionDate
+            ? new Date(dto.lastInspectionDate)
+            : undefined,
+        },
+        include: PROPERTY_VALUES_INCLUDE,
+      });
+
+      await this.auditService.log({
+        actorUserId: user.id,
+        actorRole: user.role,
+        actorName: user.fullName,
+        entityType: AuditEntityType.EQUIPMENT,
+        entityId: projector.id,
+        action: AuditAction.EQUIPMENT_CREATED,
+        message: `Created ${projector.equipmentType} in classroom ${projector.classroom} (${projector.brand} ${projector.model})`,
+        after: dto,
+      });
+
+      return projector;
     });
   }
 
-  async update(id: string, dto: UpdateProjectorDto) {
-    await this.findOne(id);
-    return this.prisma.projector.update({
+  async update(id: string, dto: UpdateProjectorDto, user: User) {
+    const before = await this.findOne(id);
+    const projector = await this.prisma.projector.update({
       where: { id },
       data: {
         ...dto,
@@ -58,11 +77,38 @@ export class ProjectorsService {
       },
       include: PROPERTY_VALUES_INCLUDE,
     });
+
+    await this.auditService.log({
+      actorUserId: user.id,
+      actorRole: user.role,
+      actorName: user.fullName,
+      entityType: AuditEntityType.EQUIPMENT,
+      entityId: id,
+      action: AuditAction.EQUIPMENT_UPDATED,
+      message: `Updated ${projector.equipmentType} in ${projector.classroom}`,
+      before,
+      after: dto,
+    });
+
+    return projector;
   }
 
-  async remove(id: string) {
-    await this.findOne(id);
-    return this.prisma.projector.delete({ where: { id } });
+  async remove(id: string, user: User) {
+    const projector = await this.findOne(id);
+    await this.prisma.projector.delete({ where: { id } });
+
+    await this.auditService.log({
+      actorUserId: user.id,
+      actorRole: user.role,
+      actorName: user.fullName,
+      entityType: AuditEntityType.EQUIPMENT,
+      entityId: id,
+      action: AuditAction.EQUIPMENT_DELETED,
+      message: `Deleted ${projector.equipmentType} in ${projector.classroom}`,
+      before: projector,
+    });
+
+    return projector;
   }
 
   // ── Property definitions ─────────────────────────────────────────────────
@@ -74,20 +120,45 @@ export class ProjectorsService {
     });
   }
 
-  createProperty(dto: CreateEquipmentPropertyDto) {
-    return this.prisma.equipmentProperty.create({ data: dto });
+  async createProperty(dto: CreateEquipmentPropertyDto, user: User) {
+    const prop = await this.prisma.equipmentProperty.create({ data: dto });
+
+    await this.auditService.log({
+      actorUserId: user.id,
+      actorRole: user.role,
+      actorName: user.fullName,
+      entityType: AuditEntityType.EQUIPMENT,
+      entityId: prop.id,
+      action: AuditAction.PROPERTY_CREATED,
+      message: `Created equipment property ${prop.label} for ${prop.equipmentType}`,
+    });
+
+    return prop;
   }
 
-  async deleteProperty(id: string) {
+  async deleteProperty(id: string, user: User) {
     const prop = await this.prisma.equipmentProperty.findUnique({ where: { id } });
     if (!prop) throw new NotFoundException(`Vlastnost s ID "${id}" nebyla nalezena.`);
-    return this.prisma.equipmentProperty.delete({ where: { id } });
+    await this.prisma.equipmentProperty.delete({ where: { id } });
+
+    await this.auditService.log({
+      actorUserId: user.id,
+      actorRole: user.role,
+      actorName: user.fullName,
+      entityType: AuditEntityType.EQUIPMENT,
+      entityId: id,
+      action: AuditAction.PROPERTY_DELETED,
+      message: `Deleted equipment property ${prop.label} for ${prop.equipmentType}`,
+      before: prop,
+    });
+
+    return prop;
   }
 
   // ── Property values ──────────────────────────────────────────────────────
 
-  async updateValues(equipmentId: string, dto: UpdateEquipmentValuesDto) {
-    await this.findOne(equipmentId);
+  async updateValues(equipmentId: string, dto: UpdateEquipmentValuesDto, user: User) {
+    const projector = await this.findOne(equipmentId);
     const upserts = dto.values.map((v) =>
       this.prisma.equipmentPropertyValue.upsert({
         where: {
@@ -108,6 +179,19 @@ export class ProjectorsService {
         },
       }),
     );
-    return Promise.all(upserts);
+    const results = await Promise.all(upserts);
+
+    await this.auditService.log({
+      actorUserId: user.id,
+      actorRole: user.role,
+      actorName: user.fullName,
+      entityType: AuditEntityType.EQUIPMENT,
+      entityId: equipmentId,
+      action: AuditAction.EQUIPMENT_UPDATED,
+      message: `Updated custom values for ${projector.equipmentType} in ${projector.classroom}`,
+      after: dto.values,
+    });
+
+    return results;
   }
 }
