@@ -43,7 +43,7 @@ export class PowerSocketController {
   @Patch('sockets/:socketId')
   updateSocket(
     @Param('socketId') socketId: string,
-    @Body() body: { isWorking?: boolean; note?: string; number?: number },
+    @Body() body: { isWorking?: boolean; hasProblem?: boolean; note?: string; number?: number },
   ) {
     return this.powerSocketService.updateSocket(socketId, body);
   }

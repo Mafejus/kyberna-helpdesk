@@ -130,6 +130,17 @@ export function SocketList({ classroomId }: SocketListProps) {
     }
   };
 
+  const handleToggleProblem = async (socket: PowerSocket) => {
+    const updated = { ...socket, hasProblem: !socket.hasProblem };
+    setSockets((prev) => prev.map((s) => (s.id === socket.id ? updated : s)));
+    try {
+      await PowerSocketService.updateSocket(socket.id, { hasProblem: updated.hasProblem });
+    } catch {
+      setSockets((prev) => prev.map((s) => (s.id === socket.id ? socket : s)));
+      toast({ variant: "destructive", title: "Chyba", description: "Uložení stavu selhalo." });
+    }
+  };
+
   // ---- Note update ----
   const handleNoteUpdate = async (socket: PowerSocket, note: string) => {
     if (note === (socket.note ?? "")) return;
@@ -210,8 +221,9 @@ export function SocketList({ classroomId }: SocketListProps) {
 
   const workingCount = sockets.filter((s) => s.isWorking).length;
   const brokenCount = sockets.length - workingCount;
-  // fixed columns: Číslo, Funkční, Stav, dynamic props, Poznámka, delete
-  const colSpan = 4 + properties.length + 1;
+  const problemCount = sockets.filter((s) => s.hasProblem).length;
+  // fixed columns: Číslo, Problém, Funkční, Stav, dynamic props, Poznámka, delete
+  const colSpan = 5 + properties.length + 1;
 
   // ---- Empty state ----
   if (!loading && sockets.length === 0) {
@@ -253,6 +265,12 @@ export function SocketList({ classroomId }: SocketListProps) {
                 <span className="flex items-center gap-1.5 text-destructive">
                   <AlertCircle className="h-4 w-4" />
                   {brokenCount} nefunkčních
+                </span>
+              )}
+              {problemCount > 0 && (
+                <span className="flex items-center gap-1.5 text-orange-500">
+                  <AlertCircle className="h-4 w-4" />
+                  {problemCount} s problémem
                 </span>
               )}
             </div>
@@ -342,6 +360,7 @@ export function SocketList({ classroomId }: SocketListProps) {
           <TableHeader>
             <TableRow>
               <TableHead className="w-[110px]">Číslo</TableHead>
+              <TableHead className="w-[100px] text-center">Problém</TableHead>
               <TableHead className="w-[100px] text-center">Funkční</TableHead>
               <TableHead className="w-[110px]">Stav</TableHead>
               {properties.map((p) => (
@@ -367,6 +386,7 @@ export function SocketList({ classroomId }: SocketListProps) {
                   socket={socket}
                   properties={properties}
                   onToggle={handleToggleWorking}
+                  onToggleProblem={handleToggleProblem}
                   onNoteUpdate={handleNoteUpdate}
                   onNumberUpdate={handleNumberUpdate}
                   onUpdateValue={handleUpdateValue}
@@ -386,6 +406,7 @@ function SocketRow({
   socket,
   properties,
   onToggle,
+  onToggleProblem,
   onNoteUpdate,
   onNumberUpdate,
   onUpdateValue,
@@ -394,6 +415,7 @@ function SocketRow({
   socket: PowerSocket;
   properties: SocketProperty[];
   onToggle: (socket: PowerSocket) => void;
+  onToggleProblem: (socket: PowerSocket) => void;
   onNoteUpdate: (socket: PowerSocket, note: string) => void;
   onNumberUpdate: (socket: PowerSocket, number: number) => void;
   onUpdateValue: (socketId: string, propertyId: string, valueBool?: boolean) => void;
@@ -410,8 +432,12 @@ function SocketRow({
     setNumber(socket.number.toString());
   }, [socket.number]);
 
+  const rowClass = !socket.isWorking 
+    ? "bg-destructive/5" 
+    : (socket.hasProblem ? "bg-orange-50" : undefined);
+
   return (
-    <TableRow className={!socket.isWorking ? "bg-destructive/5" : undefined}>
+    <TableRow className={rowClass}>
       {/* Number */}
       <TableCell className="p-2">
         <Input
@@ -420,6 +446,16 @@ function SocketRow({
           onChange={(e) => setNumber(e.target.value)}
           onBlur={() => onNumberUpdate(socket, parseInt(number))}
           onKeyDown={(e) => e.key === "Enter" && e.currentTarget.blur()}
+        />
+      </TableCell>
+
+      {/* hasProblem Switch */}
+      <TableCell className="text-center">
+        <Switch
+          checked={socket.hasProblem}
+          onCheckedChange={() => onToggleProblem(socket)}
+          aria-label={`Zásuvka #${socket.number} – problém`}
+          className="data-[state=checked]:bg-orange-500"
         />
       </TableCell>
 
