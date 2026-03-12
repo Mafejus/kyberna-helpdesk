@@ -65,7 +65,7 @@ export class ClassroomPcService {
       entityType: AuditEntityType.CLASSROOM_PC,
       entityId: prop.id,
       action: AuditAction.PROPERTY_CREATED,
-      message: `Created PC property ${prop.label} (${prop.key}) in classroom ${classroomId}`,
+      message: `Vytvořena vlastnost PC ${prop.label} (${prop.key}) v učebně ${classroomId}`,
     });
 
     return prop;
@@ -81,7 +81,7 @@ export class ClassroomPcService {
       entityType: AuditEntityType.CLASSROOM_PC,
       entityId: id,
       action: AuditAction.PROPERTY_DELETED,
-      message: `Deleted PC property ${prop.label}`,
+      message: `Smazána vlastnost PC ${prop.label} v učebně ${prop.classroomId}`,
       before: prop,
     });
 
@@ -110,7 +110,7 @@ export class ClassroomPcService {
       entityType: AuditEntityType.CLASSROOM_PC,
       entityId: pc.id,
       action: AuditAction.PC_CREATED,
-      message: `Created PC ${pc.label} in classroom ${classroomId}`,
+      message: `Vytvořen PC ${pc.label} v učebně ${classroomId}`,
       after: data,
     });
 
@@ -141,7 +141,7 @@ export class ClassroomPcService {
       entityType: AuditEntityType.CLASSROOM_PC,
       entityId: id,
       action: AuditAction.PC_UPDATED,
-      message: `Upraven PC ${pc.label}${changeText}`,
+      message: `Upraven PC ${pc.label} v učebně ${pc.classroomId}${changeText}`,
       before,
       after: data,
     });
@@ -186,7 +186,7 @@ export class ClassroomPcService {
       entityType: AuditEntityType.CLASSROOM_PC,
       entityId: pcId,
       action: AuditAction.PC_UPDATED,
-      message: `Updated custom values for PC ${pc?.label}`,
+      message: `Upraveny vlastní hodnoty pro PC ${pc?.label} v učebně ${pc?.classroomId}`,
       after: values,
     });
 
@@ -203,7 +203,7 @@ export class ClassroomPcService {
       entityType: AuditEntityType.CLASSROOM_PC,
       entityId: id,
       action: AuditAction.PC_DELETED,
-      message: `Deleted PC ${pc.label}`,
+      message: `Smazán PC ${pc.label} v učebně ${pc.classroomId}`,
       before: pc,
     });
 
@@ -235,9 +235,9 @@ export class ClassroomPcService {
       entityType: AuditEntityType.CLASSROOM_PC,
       entityId: classroomId,
       action: AuditAction.SOCKET_GENERATED, // Using SOCKET_GENERATED as placeholder or we should add PC_GENERATED but for now SOCKET_GENERATED is ok, or better adjust AuditAction
-      message: `Generated 30 PCs for classroom ${classroomId}`,
+      message: `Vygenerováno 30 počítačů pro učebnu ${classroomId}`,
     });
 
-    return { message: 'Generated 30 PCs' };
+    return { message: 'Vygenerováno 30 počítačů' };
   }
 }
