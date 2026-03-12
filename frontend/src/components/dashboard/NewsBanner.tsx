@@ -17,9 +17,9 @@ export function NewsBanner() {
   }, []);
 
   return (
-    <Card className="border-l-4 border-l-blue-500 bg-blue-50/50 dark:bg-blue-950/20">
+    <Card className="border-l-4 border-l-blue-500 bg-blue-500/10">
       <CardContent className="py-4 space-y-3">
-        <div className="flex items-center gap-2 text-blue-700 dark:text-blue-400">
+        <div className="flex items-center gap-2 text-blue-600 dark:text-blue-400">
           <Megaphone className="h-5 w-5 shrink-0" />
           <span className="font-semibold text-sm">Novinky</span>
         </div>
@@ -31,7 +31,7 @@ export function NewsBanner() {
               Sekce{" "}
               <Link
                 href="/dashboard/projectors"
-                className="font-medium text-blue-700 dark:text-blue-400 underline underline-offset-2"
+                className="font-medium text-blue-600 dark:text-blue-400 underline underline-offset-2 hover:text-blue-500"
               >
                 Vybavení
               </Link>{" "}

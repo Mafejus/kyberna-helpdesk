@@ -434,7 +434,7 @@ function SocketRow({
 
   const rowClass = !socket.isWorking 
     ? "bg-destructive/5" 
-    : (socket.hasProblem ? "bg-orange-50" : undefined);
+    : (socket.hasProblem ? "bg-orange-500/10" : undefined);
 
   return (
     <TableRow className={rowClass}>

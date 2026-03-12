@@ -74,7 +74,7 @@ export function ServiceHistory() {
                                 {start.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
                             </TableCell>
                             <TableCell>
-                                {end ? end.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : <Badge variant="outline" className="text-yellow-600 border-yellow-400 bg-yellow-50">Aktivní</Badge>}
+                                {end ? end.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : <Badge variant="outline" className="text-yellow-600 border-yellow-500/50 bg-yellow-500/10">Aktivní</Badge>}
                             </TableCell>
                             <TableCell className="text-right font-mono text-xs">
                                 {durationMins ? `${durationMins} min` : '-'}
