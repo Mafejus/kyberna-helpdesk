@@ -22,6 +22,7 @@ export interface PowerSocket {
   number: number;
   isWorking: boolean;
   hasProblem: boolean;
+  networkSpeed: string | null;
   note: string | null;
   classroomId: string;
   values: SocketPropertyValue[];
@@ -46,7 +47,7 @@ export const PowerSocketService = {
 
   updateSocket: async (
     socketId: string,
-    data: { isWorking?: boolean; hasProblem?: boolean; note?: string; number?: number }
+    data: { isWorking?: boolean; hasProblem?: boolean; note?: string; number?: number; networkSpeed?: string | null }
   ): Promise<PowerSocket> => {
     const res = await api.patch<PowerSocket>(`/sockets/${socketId}`, data);
     return res.data;

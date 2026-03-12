@@ -167,6 +167,17 @@ export function SocketList({ classroomId }: SocketListProps) {
     }
   };
 
+  // ---- Speed update ----
+  const handleSpeedUpdate = async (socket: PowerSocket, networkSpeed: string | null) => {
+    if (networkSpeed === socket.networkSpeed) return;
+    try {
+      await PowerSocketService.updateSocket(socket.id, { networkSpeed });
+      setSockets((prev) => prev.map((s) => (s.id === socket.id ? { ...s, networkSpeed } : s)));
+    } catch {
+      toast({ variant: "destructive", title: "Chyba", description: "Uložení rychlosti sítě selhalo." });
+    }
+  };
+
   // ---- Dynamic property value toggle ----
   const handleUpdateValue = async (socketId: string, propertyId: string, valueBool?: boolean) => {
     setSockets((prev) =>
@@ -224,8 +235,8 @@ export function SocketList({ classroomId }: SocketListProps) {
   const problemCount = sockets.filter((s) => s.hasProblem).length;
   const totalCount = sockets.length;
   const issueCount = sockets.filter((s) => !s.isWorking || s.hasProblem).length;
-  // fixed columns: Číslo, Problém, Funkční, Stav, dynamic props, Poznámka, delete
-  const colSpan = 5 + properties.length + 1;
+  // fixed columns: Číslo, Problém, Funkční, Stav, Rychlost, dynamic props, Poznámka, delete
+  const colSpan = 6 + properties.length + 1;
 
   // ---- Empty state ----
   if (!loading && sockets.length === 0) {
@@ -372,6 +383,7 @@ export function SocketList({ classroomId }: SocketListProps) {
               <TableHead className="w-[100px] text-center">Problém</TableHead>
               <TableHead className="w-[100px] text-center">Funkční</TableHead>
               <TableHead className="w-[110px]">Stav</TableHead>
+              <TableHead className="w-[140px]">Rychlost</TableHead>
               {properties.map((p) => (
                 <TableHead key={p.id} className="text-center min-w-[100px]">
                   {p.label}
@@ -398,6 +410,7 @@ export function SocketList({ classroomId }: SocketListProps) {
                   onToggleProblem={handleToggleProblem}
                   onNoteUpdate={handleNoteUpdate}
                   onNumberUpdate={handleNumberUpdate}
+                  onSpeedUpdate={handleSpeedUpdate}
                   onUpdateValue={handleUpdateValue}
                   onDelete={handleDeleteSocket}
                 />
@@ -418,6 +431,7 @@ function SocketRow({
   onToggleProblem,
   onNoteUpdate,
   onNumberUpdate,
+  onSpeedUpdate,
   onUpdateValue,
   onDelete,
 }: {
@@ -427,6 +441,7 @@ function SocketRow({
   onToggleProblem: (socket: PowerSocket) => void;
   onNoteUpdate: (socket: PowerSocket, note: string) => void;
   onNumberUpdate: (socket: PowerSocket, number: number) => void;
+  onSpeedUpdate: (socket: PowerSocket, speed: string | null) => void;
   onUpdateValue: (socketId: string, propertyId: string, valueBool?: boolean) => void;
   onDelete: (socketId: string) => void;
 }) {
@@ -484,6 +499,25 @@ function SocketRow({
         ) : (
           <Badge variant="destructive">Nefunkční</Badge>
         )}
+      </TableCell>
+
+      {/* Network Speed */}
+      <TableCell>
+        <Select
+          value={socket.networkSpeed ?? "none"}
+          onValueChange={(val) => onSpeedUpdate(socket, val === "none" ? null : val)}
+        >
+          <SelectTrigger className="h-8 text-xs">
+            <SelectValue placeholder="Bez rychlosti" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="none">Bez rychlosti</SelectItem>
+            <SelectItem value="100 Mb/s">100 Mb/s</SelectItem>
+            <SelectItem value="1 Gb/s">1 Gb/s</SelectItem>
+            <SelectItem value="10 Gb/s">10 Gb/s</SelectItem>
+            <SelectItem value="Jiné">Jiné</SelectItem>
+          </SelectContent>
+        </Select>
       </TableCell>
 
       {/* Dynamic property columns */}

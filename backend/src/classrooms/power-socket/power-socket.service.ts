@@ -80,7 +80,7 @@ export class PowerSocketService {
     return socket;
   }
 
-  async updateSocket(socketId: string, user: User, data: { isWorking?: boolean; hasProblem?: boolean; note?: string; number?: number }) {
+  async updateSocket(socketId: string, user: User, data: { isWorking?: boolean; hasProblem?: boolean; note?: string; number?: number; networkSpeed?: string }) {
     const before = await this.prisma.powerSocket.findUnique({ where: { id: socketId } });
     const socket = await this.prisma.powerSocket.update({
       where: { id: socketId },
@@ -100,6 +100,9 @@ export class PowerSocketService {
     }
     if (data.number !== undefined && data.number !== before?.number) {
       changes.push(`změněno číslo (${before?.number} 👉 ${data.number})`);
+    }
+    if (data.networkSpeed !== undefined && data.networkSpeed !== before?.networkSpeed) {
+      changes.push(`změněna rychlost (${before?.networkSpeed || 'žádná'} 👉 ${data.networkSpeed || 'žádná'})`);
     }
 
     const changeText = changes.length > 0 ? ` (${changes.join(', ')})` : '';
