@@ -124,6 +124,16 @@ export class ClassroomPcService {
       data,
     });
 
+    const changes: string[] = [];
+    if (data.label !== undefined && data.label !== before?.label) {
+      changes.push(`označení (${before?.label} 👉 ${data.label})`);
+    }
+    if (data.note !== undefined && data.note !== before?.note) {
+      changes.push(`poznámka`);
+    }
+
+    const changeText = changes.length > 0 ? ` (upraveno: ${changes.join(', ')})` : '';
+
     await this.auditService.log({
       actorUserId: user.id,
       actorRole: user.role,
@@ -131,7 +141,7 @@ export class ClassroomPcService {
       entityType: AuditEntityType.CLASSROOM_PC,
       entityId: id,
       action: AuditAction.PC_UPDATED,
-      message: `Updated PC ${pc.label}`,
+      message: `Upraven PC ${pc.label}${changeText}`,
       before,
       after: data,
     });

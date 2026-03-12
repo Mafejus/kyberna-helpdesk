@@ -78,6 +78,17 @@ export class ProjectorsService {
       include: PROPERTY_VALUES_INCLUDE,
     });
 
+    const changes: string[] = [];
+    if (dto.brand !== undefined && dto.brand !== before.brand) changes.push('značka');
+    if (dto.model !== undefined && dto.model !== before.model) changes.push('model');
+    if (dto.isFunctional !== undefined && dto.isFunctional !== before.isFunctional) changes.push(`stav na ${dto.isFunctional ? 'funkční' : 'nefunkční'}`);
+    if (dto.notes !== undefined && dto.notes !== before.notes) changes.push('poznámka');
+    if (dto.lastInspectionDate !== undefined) changes.push('datum revize');
+    if (dto.equipmentType !== undefined && dto.equipmentType !== before.equipmentType) changes.push('typ');
+    if (dto.classroom !== undefined && dto.classroom !== before.classroom) changes.push('učebna');
+
+    const changeText = changes.length > 0 ? ` (upraveno: ${changes.join(', ')})` : '';
+
     await this.auditService.log({
       actorUserId: user.id,
       actorRole: user.role,
@@ -85,7 +96,7 @@ export class ProjectorsService {
       entityType: AuditEntityType.EQUIPMENT,
       entityId: id,
       action: AuditAction.EQUIPMENT_UPDATED,
-      message: `Updated ${projector.equipmentType} in ${projector.classroom}`,
+      message: `Upraveno vybavení ${projector.equipmentType} v učebně ${projector.classroom}${changeText}`,
       before,
       after: dto,
     });
