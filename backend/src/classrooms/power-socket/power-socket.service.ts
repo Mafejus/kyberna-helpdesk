@@ -81,6 +81,22 @@ export class PowerSocketService {
       include: { values: true },
     });
 
+    const changes: string[] = [];
+    if (data.isWorking !== undefined && data.isWorking !== before?.isWorking) {
+      changes.push(`stav na ${data.isWorking ? 'funkční' : 'nefunkční'}`);
+    }
+    if (data.hasProblem !== undefined && data.hasProblem !== before?.hasProblem) {
+      changes.push(data.hasProblem ? 'označena s problémem' : 'zrušeno označení problému');
+    }
+    if (data.note !== undefined && data.note !== before?.note) {
+      changes.push(`upravena poznámka`);
+    }
+    if (data.number !== undefined && data.number !== before?.number) {
+      changes.push(`změněno číslo (${before?.number} 👉 ${data.number})`);
+    }
+
+    const changeText = changes.length > 0 ? ` (${changes.join(', ')})` : '';
+
     await this.auditService.log({
       actorUserId: user.id,
       actorRole: user.role,
@@ -88,7 +104,7 @@ export class PowerSocketService {
       entityType: AuditEntityType.POWER_SOCKET,
       entityId: socket.id,
       action: AuditAction.SOCKET_UPDATED,
-      message: `Updated power socket #${socket.number}`,
+      message: `Upravena zásuvka #${socket.number}${changeText}`,
       before,
       after: data,
     });
