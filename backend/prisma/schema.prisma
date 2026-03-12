@@ -414,10 +414,11 @@ model PcPropertyValue {
 model PowerSocket {
   id          String   @id @default(uuid())
   number      Int
-  isWorking   Boolean  @default(true)
-  hasProblem  Boolean  @default(false)
-  note        String?
-  classroomId String
+  isWorking    Boolean  @default(true)
+  hasProblem   Boolean  @default(false)
+  note         String?
+  networkSpeed String?
+  classroomId  String
 
   classroom   Classroom @relation(fields: [classroomId], references: [id], onDelete: Cascade)
   values      SocketPropertyValue[]
