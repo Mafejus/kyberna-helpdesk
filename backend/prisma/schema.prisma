@@ -85,10 +85,11 @@ model Classroom {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  tickets      Ticket[]
-  classroomPcs ClassroomPc[] 
-  pcProperties PcProperty[]
-  powerSockets PowerSocket[]
+  tickets         Ticket[]
+  classroomPcs    ClassroomPc[] 
+  pcProperties    PcProperty[]
+  powerSockets    PowerSocket[]
+  socketProperties SocketProperty[]
 }
 
 model Ticket {
@@ -399,8 +400,37 @@ model PowerSocket {
   classroomId String
 
   classroom   Classroom @relation(fields: [classroomId], references: [id], onDelete: Cascade)
+  values      SocketPropertyValue[]
 
   @@index([classroomId, number])
+}
+
+model SocketProperty {
+  id          String       @id @default(uuid())
+  classroomId String
+  key         String
+  label       String
+  type        PropertyType @default(BOOLEAN)
+  order       Int          @default(0)
+
+  classroom   Classroom            @relation(fields: [classroomId], references: [id], onDelete: Cascade)
+  values      SocketPropertyValue[]
+
+  @@unique([classroomId, key])
+}
+
+model SocketPropertyValue {
+  id         String   @id @default(uuid())
+  socketId   String
+  propertyId String
+
+  valueBool  Boolean?
+  valueText  String?
+
+  socket     PowerSocket    @relation(fields: [socketId], references: [id], onDelete: Cascade)
+  property   SocketProperty @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+
+  @@unique([socketId, propertyId])
 }
 
 // 7) PROJECTORS & EQUIPMENT
