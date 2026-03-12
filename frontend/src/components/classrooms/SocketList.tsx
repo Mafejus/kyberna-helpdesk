@@ -219,9 +219,11 @@ export function SocketList({ classroomId }: SocketListProps) {
     }
   };
 
-  const workingCount = sockets.filter((s) => s.isWorking).length;
-  const brokenCount = sockets.length - workingCount;
+  const workingCount = sockets.filter((s) => s.isWorking && !s.hasProblem).length;
+  const brokenCount = sockets.filter((s) => !s.isWorking).length;
   const problemCount = sockets.filter((s) => s.hasProblem).length;
+  const totalCount = sockets.length;
+  const issueCount = sockets.filter((s) => !s.isWorking || s.hasProblem).length;
   // fixed columns: Číslo, Problém, Funkční, Stav, dynamic props, Poznámka, delete
   const colSpan = 5 + properties.length + 1;
 
@@ -256,23 +258,30 @@ export function SocketList({ classroomId }: SocketListProps) {
         <div className="flex items-center gap-4">
           <h2 className="text-xl font-semibold">Zásuvky</h2>
           {sockets.length > 0 && (
-            <div className="flex gap-3 text-sm">
+            <div className="flex flex-wrap gap-x-4 gap-y-1 text-sm">
+              <span className="text-muted-foreground">Celkem: <strong>{totalCount}</strong></span>
               <span className="flex items-center gap-1.5 text-green-600">
                 <CheckCircle2 className="h-4 w-4" />
-                {workingCount} funkčních
+                {workingCount} bez chyby
               </span>
-              {brokenCount > 0 && (
-                <span className="flex items-center gap-1.5 text-destructive">
+              {issueCount > 0 && (
+                <span className="flex items-center gap-1.5 text-orange-600 font-semibold">
                   <AlertCircle className="h-4 w-4" />
-                  {brokenCount} nefunkčních
+                  {issueCount} celkem k řešení
                 </span>
               )}
-              {problemCount > 0 && (
-                <span className="flex items-center gap-1.5 text-orange-500">
-                  <AlertCircle className="h-4 w-4" />
-                  {problemCount} s problémem
-                </span>
-              )}
+              <div className="flex gap-3 border-l pl-3 ml-1">
+                {brokenCount > 0 && (
+                  <span className="text-destructive flex items-center gap-1">
+                    {brokenCount} nefunkčních
+                  </span>
+                )}
+                {problemCount > 0 && (
+                  <span className="text-orange-500 flex items-center gap-1">
+                    {problemCount} s problémem
+                  </span>
+                )}
+              </div>
             </div>
           )}
         </div>
