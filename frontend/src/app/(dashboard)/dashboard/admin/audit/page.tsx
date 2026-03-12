@@ -137,7 +137,7 @@ export default function AdminAuditPage() {
                             </div>
                         </TableCell>
                         <TableCell>
-                             <div className="text-sm max-w-[300px] truncate" title={log.message || ""}>
+                             <div className="text-sm break-words whitespace-normal min-w-[200px]">
                                 {log.message || "-"}
                             </div>
                         </TableCell>

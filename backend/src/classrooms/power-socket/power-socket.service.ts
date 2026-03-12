@@ -10,6 +10,13 @@ export class PowerSocketService {
     private auditService: AuditService,
   ) {}
 
+  private async getClassName(classroomId: string): Promise<string> {
+    const classroom = await this.prisma.classroom.findUnique({
+      where: { id: classroomId }, select: { code: true }
+    });
+    return classroom?.code || classroomId;
+  }
+
   // ---- Sockets ----
 
   async getSockets(classroomId: string) {
@@ -39,7 +46,7 @@ export class PowerSocketService {
       entityType: AuditEntityType.POWER_SOCKET,
       entityId: classroomId,
       action: AuditAction.SOCKET_GENERATED,
-      message: `Vygenerováno 50 zásuvek pro učebnu ${classroomId}`,
+      message: `Vygenerováno 50 zásuvek pro učebnu ${await this.getClassName(classroomId)}`,
     });
 
     return { message: 'Vygenerováno 50 zásuvek' };
@@ -66,7 +73,7 @@ export class PowerSocketService {
       entityType: AuditEntityType.POWER_SOCKET,
       entityId: socket.id,
       action: AuditAction.SOCKET_CREATED,
-      message: `Vytvořena zásuvka #${socket.number} v učebně ${classroomId}`,
+      message: `Vytvořena zásuvka #${socket.number} v učebně ${await this.getClassName(classroomId)}`,
       after: { number: socket.number, note: socket.note },
     });
 
@@ -104,7 +111,7 @@ export class PowerSocketService {
       entityType: AuditEntityType.POWER_SOCKET,
       entityId: socket.id,
       action: AuditAction.SOCKET_UPDATED,
-      message: `Upravena zásuvka #${socket.number} v učebně ${socket.classroomId}${changeText}`,
+      message: `Upravena zásuvka #${socket.number} v učebně ${await this.getClassName(socket.classroomId)}${changeText}`,
       before,
       after: data,
     });
@@ -122,7 +129,7 @@ export class PowerSocketService {
       entityType: AuditEntityType.POWER_SOCKET,
       entityId: socketId,
       action: AuditAction.SOCKET_DELETED,
-      message: `Smazána zásuvka #${socket.number} v učebně ${socket.classroomId}`,
+      message: `Smazána zásuvka #${socket.number} v učebně ${await this.getClassName(socket.classroomId)}`,
       before: socket,
     });
 
@@ -148,7 +155,7 @@ export class PowerSocketService {
       entityType: AuditEntityType.POWER_SOCKET,
       entityId: prop.id,
       action: AuditAction.PROPERTY_CREATED,
-      message: `Vytvořena vlastnost zásuvek ${prop.label} (${prop.key}) v učebně ${classroomId}`,
+      message: `Vytvořena vlastnost zásuvek ${prop.label} (${prop.key}) v učebně ${await this.getClassName(classroomId)}`,
     });
 
     return prop;
@@ -164,7 +171,7 @@ export class PowerSocketService {
       entityType: AuditEntityType.POWER_SOCKET,
       entityId: id,
       action: AuditAction.PROPERTY_DELETED,
-      message: `Smazána vlastnost zásuvek ${prop.label} v učebně ${prop.classroomId}`,
+      message: `Smazána vlastnost zásuvek ${prop.label} v učebně ${await this.getClassName(prop.classroomId)}`,
       before: prop,
     });
 
@@ -200,7 +207,7 @@ export class PowerSocketService {
       entityType: AuditEntityType.POWER_SOCKET,
       entityId: socketId,
       action: AuditAction.SOCKET_UPDATED,
-      message: `Upraveny vlastní hodnoty pro zásuvku #${socket?.number} v učebně ${socket?.classroomId}`,
+      message: `Upraveny vlastní hodnoty pro zásuvku #${socket?.number} v učebně ${socket ? await this.getClassName(socket.classroomId) : 'neznámé'}`,
       after: values,
     });
 
