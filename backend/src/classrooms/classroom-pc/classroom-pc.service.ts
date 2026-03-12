@@ -10,6 +10,13 @@ export class ClassroomPcService {
     private auditService: AuditService,
   ) {}
 
+  private async getClassName(classroomId: string): Promise<string> {
+    const classroom = await this.prisma.classroom.findUnique({
+      where: { id: classroomId }, select: { code: true }
+    });
+    return classroom?.code || classroomId;
+  }
+
   async findAll(classroomId: string) {
     const pcs = await this.prisma.classroomPc.findMany({
       where: { classroomId },
@@ -65,7 +72,7 @@ export class ClassroomPcService {
       entityType: AuditEntityType.CLASSROOM_PC,
       entityId: prop.id,
       action: AuditAction.PROPERTY_CREATED,
-      message: `Vytvořena vlastnost PC ${prop.label} (${prop.key}) v učebně ${classroomId}`,
+      message: `Vytvořena vlastnost PC ${prop.label} (${prop.key}) v učebně ${await this.getClassName(classroomId)}`,
     });
 
     return prop;
@@ -81,7 +88,7 @@ export class ClassroomPcService {
       entityType: AuditEntityType.CLASSROOM_PC,
       entityId: id,
       action: AuditAction.PROPERTY_DELETED,
-      message: `Smazána vlastnost PC ${prop.label} v učebně ${prop.classroomId}`,
+      message: `Smazána vlastnost PC ${prop.label} v učebně ${await this.getClassName(prop.classroomId)}`,
       before: prop,
     });
 
@@ -110,7 +117,7 @@ export class ClassroomPcService {
       entityType: AuditEntityType.CLASSROOM_PC,
       entityId: pc.id,
       action: AuditAction.PC_CREATED,
-      message: `Vytvořen PC ${pc.label} v učebně ${classroomId}`,
+      message: `Vytvořen PC ${pc.label} v učebně ${await this.getClassName(classroomId)}`,
       after: data,
     });
 
@@ -141,7 +148,7 @@ export class ClassroomPcService {
       entityType: AuditEntityType.CLASSROOM_PC,
       entityId: id,
       action: AuditAction.PC_UPDATED,
-      message: `Upraven PC ${pc.label} v učebně ${pc.classroomId}${changeText}`,
+      message: `Upraven PC ${pc.label} v učebně ${await this.getClassName(pc.classroomId)}${changeText}`,
       before,
       after: data,
     });
@@ -186,7 +193,7 @@ export class ClassroomPcService {
       entityType: AuditEntityType.CLASSROOM_PC,
       entityId: pcId,
       action: AuditAction.PC_UPDATED,
-      message: `Upraveny vlastní hodnoty pro PC ${pc?.label} v učebně ${pc?.classroomId}`,
+      message: `Upraveny vlastní hodnoty pro PC ${pc?.label} v učebně ${pc ? await this.getClassName(pc.classroomId) : 'neznámé'}`,
       after: values,
     });
 
@@ -203,7 +210,7 @@ export class ClassroomPcService {
       entityType: AuditEntityType.CLASSROOM_PC,
       entityId: id,
       action: AuditAction.PC_DELETED,
-      message: `Smazán PC ${pc.label} v učebně ${pc.classroomId}`,
+      message: `Smazán PC ${pc.label} v učebně ${await this.getClassName(pc.classroomId)}`,
       before: pc,
     });
 
@@ -235,7 +242,7 @@ export class ClassroomPcService {
       entityType: AuditEntityType.CLASSROOM_PC,
       entityId: classroomId,
       action: AuditAction.SOCKET_GENERATED, // Using SOCKET_GENERATED as placeholder or we should add PC_GENERATED but for now SOCKET_GENERATED is ok, or better adjust AuditAction
-      message: `Vygenerováno 30 počítačů pro učebnu ${classroomId}`,
+      message: `Vygenerováno 30 počítačů pro učebnu ${await this.getClassName(classroomId)}`,
     });
 
     return { message: 'Vygenerováno 30 počítačů' };
