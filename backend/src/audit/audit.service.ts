@@ -38,6 +38,7 @@ export class AuditService {
     entityId?: string;
     action?: AuditAction;
     userId?: string; // Filter by actor
+    search?: string;
   }) {
     const {
       cursor,
@@ -46,18 +47,29 @@ export class AuditService {
       entityId,
       action,
       userId,
+      search,
     } = params;
 
     const limit = limitRaw || 20;
     const take = Math.min(Math.max(limit, 1), 50) + 1;
 
-    const args: any = {
-      where: {
-        entityType,
-        entityId,
-        action,
-        actorUserId: userId,
-      },
+    const where: Prisma.AuditLogWhereInput = {
+      entityType,
+      entityId,
+      action,
+      actorUserId: userId,
+    };
+
+    if (search) {
+      where.OR = [
+        { message: { contains: search, mode: 'insensitive' } },
+        { actorName: { contains: search, mode: 'insensitive' } },
+        { entityId: { contains: search, mode: 'insensitive' } },
+      ];
+    }
+
+    const args: Prisma.AuditLogFindManyArgs = {
+      where,
       orderBy: { createdAt: 'desc' },
       take,
     };

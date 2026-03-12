@@ -26,6 +26,7 @@ export class AuditController {
     @Query('entityType') entityType?: string,
     @Query('entityId') entityId?: string,
     @Query('userId') userId?: string,
+    @Query('search') search?: string,
     @Query('limit') limit = '20',
     @Query('cursor') cursor?: string,
   ) {
@@ -36,6 +37,7 @@ export class AuditController {
       entityType: entityType as any,
       entityId,
       userId,
+      search,
     });
   }
 }

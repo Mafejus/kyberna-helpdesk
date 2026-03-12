@@ -4,6 +4,7 @@ export interface AuditLogParams {
   entityType?: string;
   entityId?: string;
   userId?: string;
+  search?: string;
   limit?: number;
   cursor?: string;
 }
