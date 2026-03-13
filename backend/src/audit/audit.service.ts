@@ -70,7 +70,10 @@ export class AuditService {
 
     const args: Prisma.AuditLogFindManyArgs = {
       where,
-      orderBy: { createdAt: 'desc' },
+      orderBy: [
+        { createdAt: 'desc' },
+        { id: 'asc' }, // Tie-breaker for cursor pagination
+      ],
       take,
     };
 
@@ -100,7 +103,10 @@ export class AuditService {
         entityType,
         entityId,
       },
-      orderBy: { createdAt: 'desc' },
+      orderBy: [
+        { createdAt: 'desc' },
+        { id: 'asc' },
+      ],
     });
   }
 }
